@@ -3389,6 +3389,27 @@
                     const totalItemPrice = item.qty * cost;
                     totalBillPrice += totalItemPrice;
 
+                    // 🌟 [อัปเกรด] คำนวณว่าสินค้าตัวนี้ในบิลนี้ ถูก "คืนเข้าคลัง" ไปแล้วเท่าไหร่
+                    // เช็คจากประวัติรับเข้า (stockIn) ที่มีหมายเหตุอ้างอิงกลับมาที่บิลนี้ (จาก returnItemToStock)
+                    // 🎯 ไม่แก้ตัวเลข "เบิก" เดิมในบิล (เก็บประวัติไว้ตามจริงเพื่อ audit trail)
+                    // แต่โชว์ป้าย "คืนแล้ว" แยกต่างหาก จะได้เห็นครบทั้งของเดิมและของที่คืนไปแล้ว
+                    const returnedQty = stockInTransactions
+                        .filter(t => t.productId === item.productId && (t.remark || '').includes(`รับคืนจากบิล ${orderId}`))
+                        .reduce((sum, t) => sum + (parseFloat(t.qty) || 0), 0);
+                    const remainingQty = item.qty - returnedQty;
+
+                    const returnedBadgeHtml = returnedQty > 0 ? `
+                        <div class="mt-1.5">
+                            <span class="inline-flex items-center gap-1 bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap">
+                                <i data-lucide="corner-down-left" class="w-3 h-3"></i>คืนแล้ว ${returnedQty}${remainingQty <= 0 ? ' (ครบแล้ว)' : ''}
+                            </span>
+                        </div>` : '';
+
+                    const returnBtnHtml = remainingQty > 0 ? `
+                        <button onclick="returnItemToStock('${orderId}', '${item.productId}', ${remainingQty})" class="px-4 py-1.5 bg-white border border-emerald-300 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg text-xs font-bold transition-colors shadow-sm flex items-center justify-center mx-auto space-x-1.5">
+                            <i data-lucide="corner-down-left" class="w-3.5 h-3.5"></i><span>คืนของเข้าคลัง</span>
+                        </button>` : `<span class="text-[11px] text-slate-400 font-medium">คืนครบแล้ว</span>`;
+
                     // 🌟 [เพิ่มใหม่] วิชามาร: ตรวจจับว่าในหมายเหตุมีแท็กรูปภาพซ่อนอยู่หรือไม่
                     let rawRemark = item.remark || '';
                     let imageBtnHtml = '';
@@ -3417,12 +3438,10 @@
                                 <span class="text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md">รวม: ฿${totalItemPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
                             </div>
                         </td>
-                        <td class="p-4 text-center font-bold text-blue-700 text-lg">${item.qty}</td>
+                        <td class="p-4 text-center font-bold text-blue-700 text-lg">${item.qty}${returnedBadgeHtml}</td>
                         <td class="p-4 text-slate-500 font-medium">${p ? p.unit : '-'}</td>
                         <td class="p-4 text-center modal-action-cell">
-                            <button onclick="returnItemToStock('${orderId}', '${item.productId}', ${item.qty})" class="px-4 py-1.5 bg-white border border-emerald-300 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg text-xs font-bold transition-colors shadow-sm flex items-center justify-center mx-auto space-x-1.5">
-                                <i data-lucide="corner-down-left" class="w-3.5 h-3.5"></i><span>คืนของเข้าคลัง</span>
-                            </button>
+                            ${returnBtnHtml}
                         </td>
                     </tr>
                 `;
@@ -3491,7 +3510,7 @@
 
             // 🌟 ฟังก์ชันสำหรับทำรายการคืนของเข้าคลัง
             async function returnItemToStock(orderId, productId, maxQty) {
-                const returnQtyStr = await showCustomPrompt("ระบุจำนวนคืน", `📦 กำลังดำเนินการคืนของ: <span class="font-bold text-blue-600">${productId}</span><br>(เบิกไปในบิลนี้ทั้งหมด ${maxQty} ชิ้น)<br><br>กรุณาระบุ <b>จำนวนที่ต้องการคืนเข้าคลัง:</b>`, "number", maxQty);
+                const returnQtyStr = await showCustomPrompt("ระบุจำนวนคืน", `📦 กำลังดำเนินการคืนของ: <span class="font-bold text-blue-600">${productId}</span><br>(คงเหลือที่ยังไม่ได้คืนในบิลนี้: ${maxQty} ชิ้น)<br><br>กรุณาระบุ <b>จำนวนที่ต้องการคืนเข้าคลัง:</b>`, "number", maxQty);
                 if (returnQtyStr === null) return;
 
                 const returnQty = parseInt(returnQtyStr);
@@ -3499,7 +3518,7 @@
                     showToast("กรุณาระบุจำนวนให้ถูกต้องครับ", "warning"); return;
                 }
                 if (returnQty > maxQty) {
-                    showToast(`คืนของเกินจำนวนไม่ได้ครับ! (เบิกไปแค่ ${maxQty} ชิ้น)`, "error"); return;
+                    showToast(`คืนของเกินจำนวนที่เหลือไม่ได้ครับ! (เหลือคืนได้แค่ ${maxQty} ชิ้น)`, "error"); return;
                 }
 
                 const pin = await showCustomPrompt("ยืนยันตัวตน", "กรุณากรอกรหัส PIN 4 หลักของ <b>ผู้รับของคืน</b>", "password", "••••");
