@@ -281,6 +281,18 @@
                 background: #fff !important;
             }
 
+            /* 🌟 [อัปเกรด] โหมดพิมพ์รายงานสรุปการเบิกตามผู้เบิก (เหมือน print-survey-active แต่คนละแม่แบบ) */
+            body.print-requester-active > *:not(#print-requester-template) {
+                display: none !important;
+            }
+
+            body.print-requester-active #print-requester-template {
+                display: block !important;
+                position: relative !important;
+                width: 100% !important;
+                background: #fff !important;
+            }
+
             body:not(.print-survey-active) aside,
             body:not(.print-survey-active) header,
             body:not(.print-survey-active) .no-print {
@@ -1128,29 +1140,46 @@
                 <section id="page-history-out" class="page-content hidden">
                     <h2 class="text-xl font-bold text-slate-800 mb-4" id="title-page-history-out">ประวัติปลายทาง
                         (ข้อมูลการเบิกใช้สินค้าแบบแยกบิล)</h2>
-                    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-5">
-                        <div class="flex flex-wrap items-center gap-3">
-                            <button onclick="setBillFilter('all')" id="btn-bill-all"
-                                class="neu-btn px-4 py-2.5 text-xs font-bold text-blue-600 rounded-xl shadow-[inset_3px_3px_6px_#d1d9e6,inset_-3px_-3px_6px_#ffffff]">ทั้งหมด</button>
-                            <button onclick="setBillFilter('general')" id="btn-bill-general"
-                                class="neu-btn px-4 py-2.5 text-xs font-bold text-slate-500 rounded-xl">บิลทั่วไป</button>
-                            <button onclick="setBillFilter('pending')" id="btn-bill-pending"
-                                class="neu-btn px-4 py-2.5 text-xs font-bold text-amber-600 rounded-xl flex items-center space-x-1"><i
-                                    data-lucide="alert-triangle" class="w-3.5 h-3.5"></i><span>รอตรวจสอบ</span></button>
-                            <button onclick="setBillFilter('verified')" id="btn-bill-verified"
-                                class="neu-btn px-4 py-2.5 text-xs font-bold text-emerald-600 rounded-xl flex items-center space-x-1"><i
-                                    data-lucide="check-circle" class="w-3.5 h-3.5"></i><span>ตรวจเสร็จ</span></button>
+                    <div class="flex flex-col gap-4 mb-5">
+                        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                            <div class="flex flex-wrap items-center gap-3">
+                                <button onclick="setBillFilter('all')" id="btn-bill-all"
+                                    class="neu-btn px-4 py-2.5 text-xs font-bold text-blue-600 rounded-xl shadow-[inset_3px_3px_6px_#d1d9e6,inset_-3px_-3px_6px_#ffffff]">ทั้งหมด</button>
+                                <button onclick="setBillFilter('general')" id="btn-bill-general"
+                                    class="neu-btn px-4 py-2.5 text-xs font-bold text-slate-500 rounded-xl">บิลทั่วไป</button>
+                                <button onclick="setBillFilter('pending')" id="btn-bill-pending"
+                                    class="neu-btn px-4 py-2.5 text-xs font-bold text-amber-600 rounded-xl flex items-center space-x-1"><i
+                                        data-lucide="alert-triangle" class="w-3.5 h-3.5"></i><span>รอตรวจสอบ</span></button>
+                                <button onclick="setBillFilter('verified')" id="btn-bill-verified"
+                                    class="neu-btn px-4 py-2.5 text-xs font-bold text-emerald-600 rounded-xl flex items-center space-x-1"><i
+                                        data-lucide="check-circle" class="w-3.5 h-3.5"></i><span>ตรวจเสร็จ</span></button>
+                            </div>
+                            <!-- 🌟 [อัปเกรด] ปุ่มออกรายงาน PDF สรุปการเบิกตามผู้เบิก (เคารพตัวกรองที่เลือกไว้ปัจจุบัน) -->
+                            <button onclick="printRequesterReport()"
+                                class="px-4 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-xs font-bold rounded-xl flex items-center justify-center space-x-2 transition-all shadow-lg shadow-blue-500/30 shrink-0">
+                                <i data-lucide="printer" class="w-3.5 h-3.5"></i><span>ออกรายงาน PDF (สรุปตามผู้เบิก)</span>
+                            </button>
                         </div>
-                        <div class="flex items-center space-x-2 text-xs font-bold shrink-0">
-                            <span class="text-slate-400">ช่วงวันที่:</span>
-                            <input type="date" id="out-start-date" onchange="renderHistoryOutTable()"
-                                class="p-2.5 neu-input rounded-xl text-xs font-medium text-slate-700">
-                            <span class="text-slate-400">ถึง</span>
-                            <input type="date" id="out-end-date" onchange="renderHistoryOutTable()"
-                                class="p-2.5 neu-input rounded-xl text-xs font-medium text-slate-700">
-                            <button onclick="clearDateFilter('out')"
-                                class="p-2.5 bg-white border border-slate-200 text-slate-400 hover:text-rose-600 rounded-xl transition-colors shadow-sm"><i
-                                    data-lucide="refresh-cw" class="w-3.5 h-3.5"></i></button>
+                        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                            <!-- 🌟 [อัปเกรด] ตัวกรองชื่อผู้เบิกสินค้า -->
+                            <div class="relative w-full lg:w-72">
+                                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none"><i
+                                        data-lucide="search" class="h-4 w-4 text-slate-400"></i></div>
+                                <input type="text" id="out-user-filter" oninput="renderHistoryOutTable()"
+                                    placeholder="กรองตามชื่อผู้เบิกสินค้า..."
+                                    class="w-full pl-10 pr-4 py-2.5 neu-input rounded-xl text-xs font-medium text-slate-700">
+                            </div>
+                            <div class="flex items-center space-x-2 text-xs font-bold shrink-0">
+                                <span class="text-slate-400">ช่วงวันที่:</span>
+                                <input type="date" id="out-start-date" onchange="renderHistoryOutTable()"
+                                    class="p-2.5 neu-input rounded-xl text-xs font-medium text-slate-700">
+                                <span class="text-slate-400">ถึง</span>
+                                <input type="date" id="out-end-date" onchange="renderHistoryOutTable()"
+                                    class="p-2.5 neu-input rounded-xl text-xs font-medium text-slate-700">
+                                <button onclick="clearDateFilter('out')"
+                                    class="p-2.5 bg-white border border-slate-200 text-slate-400 hover:text-rose-600 rounded-xl transition-colors shadow-sm"><i
+                                        data-lucide="refresh-cw" class="w-3.5 h-3.5"></i></button>
+                            </div>
                         </div>
                     </div>
                     <div
@@ -1400,6 +1429,30 @@
             </div>
         </div>
 
+        <!-- 🌟 [อัปเกรด] แม่แบบสำหรับพิมพ์รายงานสรุปการเบิกตามผู้เบิก -->
+        <div id="print-requester-template" class="hidden absolute top-0 left-0 bg-white w-full text-black z-[9999]">
+            <div class="relative max-w-[210mm] mx-auto p-6 bg-white">
+                <div class="w-full mb-4 border-b border-slate-800 pb-3">
+                    <div class="flex justify-between items-start">
+                        <div class="text-left mt-1">
+                            <h2 class="text-sm font-black tracking-widest text-slate-800">CCT & CCPT</h2>
+                            <div class="text-[9px] text-blue-600 font-bold uppercase tracking-[0.15em] mt-0.5">STOCK
+                                MANAGEMENT</div>
+                        </div>
+                        <div><img src="https://img2.pic.in.th/S__4325382-removebg-preview51cfea9ad7ac0759.png"
+                                class="h-10 object-contain" alt="Logo"></div>
+                    </div>
+                    <div class="text-center pt-1">
+                        <h1 class="text-lg font-black mb-1 text-slate-800">รายงานสรุปการเบิกสินค้าตามผู้เบิก</h1>
+                        <p class="text-xs text-slate-600" id="print-requester-range"></p>
+                        <p class="text-[10px] text-slate-400" id="print-requester-date"></p>
+                    </div>
+                </div>
+
+                <div id="print-requester-body"></div>
+            </div>
+        </div>
+
         <div id="print-survey-template"
             class="hidden absolute top-0 left-0 w-full z-[9999] bg-gray-100 py-10 print:py-0"
             style="font-family: 'Kanit', sans-serif;">
@@ -1534,6 +1587,22 @@
                         <tbody id="modal-table-body"></tbody>
                     </table>
                 </div>
+                <!-- 🌟 [อัปเกรด] ช่องเซ็นชื่อผู้เบิก/ผู้จ่าย พร้อมวันเดือนปี — ปกติซ่อนไว้ โชว์เฉพาะตอนกด "สร้าง PDF" เท่านั้น -->
+                <div id="modal-signature-block" class="hidden shrink-0 mt-2 pt-6 border-t border-slate-300">
+                    <div class="flex justify-between px-6 text-sm font-medium text-slate-800">
+                        <div class="text-center w-1/2">
+                            <p>ลงชื่อ ..................................................... ผู้เบิก</p>
+                            <p class="mt-8">( ..................................................... )</p>
+                            <p class="mt-3 text-xs">วันที่ ......... เดือน ......................... พ.ศ. ..........</p>
+                        </div>
+                        <div class="text-center w-1/2">
+                            <p>ลงชื่อ ..................................................... ผู้จ่าย</p>
+                            <p class="mt-8">( ..................................................... )</p>
+                            <p class="mt-3 text-xs">วันที่ ......... เดือน ......................... พ.ศ. ..........</p>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="flex justify-between items-center shrink-0" id="modal-footer-btns">
                     <button id="modal-btn-delete"
                         class="px-5 py-3 bg-rose-50 border border-rose-200 hover:bg-rose-100 text-rose-700 text-sm font-bold rounded-xl flex items-center space-x-2 transition-colors">
@@ -2804,11 +2873,13 @@
                 renderHistoryOutTable();
             }
 
-            function renderHistoryOutTable() {
-                const tbody = document.getElementById('history-out-table-body'); if (!tbody) return;
-
+            // 🌟 [อัปเกรด] แยก logic การกรอง+จัดกลุ่มบิลออกมาเป็นฟังก์ชันกลาง
+            // ใช้ร่วมกันทั้งตาราง renderHistoryOutTable() และรายงาน PDF printRequesterReport()
+            // เพื่อให้ผลลัพธ์ตรงกันเสมอ ไม่ต้องเขียน logic กรองซ้ำ 2 ที่
+            function getFilteredBillGroups() {
                 const startVal = document.getElementById('out-start-date').value;
                 const endVal = document.getElementById('out-end-date').value;
+                const userFilterVal = (document.getElementById('out-user-filter')?.value || '').trim().toLowerCase();
 
                 const grouped = stockOutTransactions.reduce((acc, curr) => {
                     const key = curr.orderId || curr.id || 'N/A';
@@ -2827,6 +2898,11 @@
                     });
                 }
 
+                // 🌟 [อัปเกรด] กรองตามชื่อผู้เบิกสินค้า (ค้นหาแบบ partial match ไม่สนตัวพิมพ์เล็ก-ใหญ่)
+                if (userFilterVal) {
+                    sortedGroups = sortedGroups.filter(group => (group.user || '').toLowerCase().includes(userFilterVal));
+                }
+
                 sortedGroups.sort((a, b) => new Date(b.date) - new Date(a.date));
                 sortedGroups = sortedGroups.map(group => {
                     const hasOFC = group.items.some(item => {
@@ -2838,7 +2914,6 @@
                         return p && p.category && p.category.trim() === 'Material OFC';
                     });
 
-                    // 🎯 [จุดที่แก้บั๊ก] เพิ่มการอ่านสถานะ 'ตรวจเสร็จ' (ภาษาไทย) ตารางจะได้แสดงป้ายสีเขียวได้
                     const allOFCVerified = ofcItems.length > 0 && ofcItems.every(item => item.status === 'Verified' || item.status === 'ตรวจเสร็จ');
 
                     if (!hasOFC) group.billType = 'general';
@@ -2849,8 +2924,16 @@
 
                 if (currentBillFilter !== 'all') sortedGroups = sortedGroups.filter(g => g.billType === currentBillFilter);
 
+                return sortedGroups;
+            }
+
+            function renderHistoryOutTable() {
+                const tbody = document.getElementById('history-out-table-body'); if (!tbody) return;
+
+                const sortedGroups = getFilteredBillGroups();
+
                 if (sortedGroups.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-400 font-medium">ไม่พบบิลในช่วงเวลาที่ระบุ</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-400 font-medium">ไม่พบบิลตามเงื่อนไขที่กรองไว้</td></tr>`;
                     return;
                 }
 
@@ -2871,6 +2954,91 @@
                 </tr>`;
                 }).join('');
                 if (typeof lucide !== 'undefined') lucide.createIcons();
+            }
+
+            // 🌟 [อัปเกรด] ออกรายงาน PDF สรุปยอดเบิกของแต่ละคน ตามตัวกรองปัจจุบัน (ชื่อผู้เบิก/ช่วงวันที่/สถานะบิล)
+            function printRequesterReport() {
+                const groups = getFilteredBillGroups();
+                if (groups.length === 0) {
+                    showToast("ไม่พบข้อมูลบิลตามเงื่อนไขที่กรองไว้ ลองปรับตัวกรองดูครับ", "error");
+                    return;
+                }
+
+                // จัดกลุ่มตามชื่อผู้เบิก แล้วรวมยอดสินค้าที่เบิกไปของแต่ละคน
+                const byUser = {};
+                groups.forEach(group => {
+                    const userName = group.user || 'ไม่ระบุชื่อ';
+                    if (!byUser[userName]) byUser[userName] = { orderIds: new Set(), products: {} };
+                    byUser[userName].orderIds.add(group.orderId);
+                    group.items.forEach(item => {
+                        const p = products.find(prod => prod.id === item.productId);
+                        const displayName = p ? `${p.id} - ${p.name}` : item.productId;
+                        const unit = p ? p.unit : '';
+                        if (!byUser[userName].products[item.productId]) {
+                            byUser[userName].products[item.productId] = { name: displayName, unit: unit, qty: 0, orderIds: new Set() };
+                        }
+                        byUser[userName].products[item.productId].qty += (parseFloat(item.qty) || 0);
+                        byUser[userName].products[item.productId].orderIds.add(group.orderId);
+                    });
+                });
+
+                const startVal = document.getElementById('out-start-date').value;
+                const endVal = document.getElementById('out-end-date').value;
+                const rangeLabel = (startVal || endVal) ? `ช่วงวันที่: ${startVal || '(ไม่ระบุ)'} ถึง ${endVal || '(ไม่ระบุ)'}` : 'ข้อมูลทั้งหมด (ไม่ได้กรองช่วงวันที่)';
+                document.getElementById('print-requester-range').innerText = rangeLabel;
+                document.getElementById('print-requester-date').innerText = `พิมพ์เมื่อ: ${new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })}`;
+
+                const container = document.getElementById('print-requester-body');
+                container.innerHTML = Object.keys(byUser).sort((a, b) => a.localeCompare(b, 'th')).map(userName => {
+                    const data = byUser[userName];
+                    const productRows = Object.values(data.products).map((p, idx) => `
+                        <tr>
+                            <td class="border border-slate-800 p-1.5 text-center">${idx + 1}</td>
+                            <td class="border border-slate-800 p-1.5">${p.name}</td>
+                            <td class="border border-slate-800 p-1.5 text-center font-bold">${p.qty}</td>
+                            <td class="border border-slate-800 p-1.5 text-center">${p.unit}</td>
+                            <td class="border border-slate-800 p-1.5 text-center text-[9px]">${Array.from(p.orderIds).join(', ')}</td>
+                        </tr>`).join('');
+
+                    return `
+                    <div class="mb-8 break-inside-avoid">
+                        <div class="flex justify-between items-center bg-slate-100 px-3 py-2 border border-slate-800 border-b-0">
+                            <h3 class="font-bold text-xs text-slate-800">ผู้เบิก: ${userName}</h3>
+                            <span class="text-[10px] text-slate-600">จำนวนบิลทั้งหมด: ${data.orderIds.size} บิล</span>
+                        </div>
+                        <table class="w-full text-left text-[10px] border-collapse border border-slate-800">
+                            <thead class="bg-slate-50 text-slate-800">
+                                <tr>
+                                    <th class="border border-slate-800 p-1.5 text-center w-8">ลำดับ</th>
+                                    <th class="border border-slate-800 p-1.5 text-center">รหัส - ชื่อสินค้า</th>
+                                    <th class="border border-slate-800 p-1.5 text-center w-16">จำนวนรวม</th>
+                                    <th class="border border-slate-800 p-1.5 text-center w-14">หน่วย</th>
+                                    <th class="border border-slate-800 p-1.5 text-center w-32">เลขที่บิลที่เกี่ยวข้อง</th>
+                                </tr>
+                            </thead>
+                            <tbody>${productRows}</tbody>
+                        </table>
+                    </div>`;
+                }).join('');
+
+                const sidebar = document.querySelector('aside'); const mainContent = document.querySelector('main');
+                const printForm = document.getElementById('print-requester-template');
+
+                document.body.classList.add('print-requester-active');
+                sidebar.style.display = 'none'; mainContent.style.display = 'none';
+                document.body.classList.remove('bg-[#eef2f7]');
+                document.body.classList.add('bg-white');
+                printForm.classList.remove('hidden');
+
+                setTimeout(() => {
+                    window.print();
+
+                    document.body.classList.remove('print-requester-active');
+                    sidebar.style.display = ''; mainContent.style.display = '';
+                    document.body.classList.add('bg-[#eef2f7]');
+                    document.body.classList.remove('bg-white');
+                    printForm.classList.add('hidden');
+                }, 500);
             }
 
             function downloadProductFormPDF() {
@@ -3450,6 +3618,9 @@
             for (let i = 0; i < actionCells.length; i++) {
                 actionCells[i].style.display = 'none';
             }
+
+            // 🌟 [อัปเกรด] โชว์ช่องเซ็นชื่อผู้เบิก/ผู้จ่าย + วันเดือนปี เฉพาะตอนสร้าง PDF เท่านั้น
+            document.getElementById('modal-signature-block').classList.remove('hidden');
 
             // 2. ปลดล็อกความสูงตาราง ไม่ให้โดนตัดตอนปริ้นท์
             let modalContainer = document.getElementById('modal-container');
@@ -4053,11 +4224,25 @@
                         const dateStr = isNaN(log.dateObj) ? log.date : log.dateObj.toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
 
                         // 🎯 ปลดล็อค max-w ให้ช่องหมายเหตุยืดได้เต็มที่ และข้อความตัดบรรทัดให้อัตโนมัติถ้ายาวเกิน
+                        // 🌟 [อัปเกรด] ถ้าเป็นรายการ "เบิกออก" และมีเลขบิลอ้างอิง โชว์เลขบิลเป็นปุ่มกดได้
+                        // กดแล้วจะปิดหน้าต่างนี้ แล้วเปิดหน้าต่างรายละเอียดบิลนั้นต่อให้เลย
+                        let remarkCellHTML;
+                        if (log.type === 'out' && log.orderId) {
+                            remarkCellHTML = `
+                            <button onclick="closeHistoryModal(); setTimeout(() => openOrderModal('${log.orderId}'), 320);"
+                                class="font-mono font-bold text-blue-600 hover:text-blue-800 hover:underline whitespace-nowrap">
+                                บิล: ${log.orderId}
+                            </button>
+                            ${log.remark ? `<span class="text-slate-400 mx-1">•</span><span title="${log.remark}">${log.remark}</span>` : ''}`;
+                        } else {
+                            remarkCellHTML = log.remark || '-';
+                        }
+
                         tr.innerHTML = `
                         <td class="p-3 text-slate-600 font-medium whitespace-nowrap">${dateStr}</td>
                         <td class="p-3 text-center whitespace-nowrap">${typeBadge}</td>
                         <td class="p-3 text-center font-bold font-mono text-sm ${qtyStyle}">${log.type === 'in' ? '+' : '-'}${qty}</td>
-                        <td class="p-3 text-slate-600 text-xs" title="${log.remark || '-'}">${log.remark || '-'}</td>
+                        <td class="p-3 text-slate-600 text-xs">${remarkCellHTML}</td>
                     `;
                         tbody.appendChild(tr);
                     });
