@@ -3332,14 +3332,21 @@
 
             async function deleteHistoryItem(type, id) {
                 if (!await showCustomConfirm("ลบประวัติ", "ยืนยันการลบประวัตินี้ทิ้งใช่หรือไม่? (การกระทำนี้ย้อนกลับไม่ได้)", true)) return;
+
+                // 🔐 [อัปเกรด] ขอ PIN ยืนยันตัวตนก่อนลบประวัติ (เดิมจุดนี้ไม่มีการขอ PIN เลย)
+                const pin = await showCustomPrompt("ยืนยันตัวตน", "กรุณากรอกรหัส PIN 4 หลักเพื่อยืนยันสิทธิ์ <b>การลบประวัติ</b>", "password", "••••");
+                if (pin === null) return;
+                if (!USER_PINS[pin]) { showToast("รหัส PIN ผิดพลาด ปฏิเสธการลบ!", "error"); return; }
+
                 setSyncStatus(true, "กำลังลบประวัติ...");
                 const targetAction = getModeAction("deleteStock" + type);
                 try {
-                    const response = await fetch(`${SCRIPT_URL}?action=${targetAction}&id=${encodeURIComponent(id)}`, { method: 'POST', redirect: 'follow' });
+                    // 🔐 แนบ pin ไปให้ Apps Script เช็คซ้ำฝั่ง server ก่อนลบจริง
+                    const response = await fetch(`${SCRIPT_URL}?action=${targetAction}&id=${encodeURIComponent(id)}&pin=${encodeURIComponent(pin)}`, { method: 'POST', redirect: 'follow' });
                     const res = await response.json();
-                    if (res.status === "success") { alert("ลบข้อมูลสำเร็จ"); fetchCloudData(); }
-                    else { alert("ไม่สามารถลบได้"); setSyncStatus(false); }
-                } catch (error) { setSyncStatus(false); }
+                    if (res.status === "success") { showToast("ลบข้อมูลสำเร็จ", "success"); fetchCloudData(); }
+                    else { showToast("ไม่สามารถลบได้: " + res.message, "error"); setSyncStatus(false); }
+                } catch (error) { showToast("เกิดข้อผิดพลาดในการเชื่อมต่อ", "error"); setSyncStatus(false); }
             }
 
             function exportAllToExcel() {
