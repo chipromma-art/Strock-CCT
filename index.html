@@ -3122,10 +3122,18 @@
                         // 🌟 [อัปเกรด] คีย์รวมคลังเข้าไปด้วย กันรหัสสินค้าชนกันกรณีมีรหัสซ้ำกันคนละคลัง
                         const productKey = `${item.warehouse}::${item.productId}`;
                         if (!byUser[userName].products[productKey]) {
-                            byUser[userName].products[productKey] = { name: displayName, unit: unit, qty: 0, orderIds: new Set(), warehouse: item.warehouse };
+                            byUser[userName].products[productKey] = { name: displayName, unit: unit, qty: 0, returnedQty: 0, orderIds: new Set(), warehouse: item.warehouse };
                         }
                         byUser[userName].products[productKey].qty += (parseFloat(item.qty) || 0);
                         byUser[userName].products[productKey].orderIds.add(group.orderId);
+
+                        // 🌟 [อัปเกรด] เช็คว่ารายการนี้ถูกคืนเข้าคลังไปแล้วเท่าไหร่ (อ้างอิงจากประวัติรับเข้าที่มีหมายเหตุอ้างบิลนี้)
+                        // 🎯 ไม่ลบยอดเบิกดิบทิ้ง (เก็บไว้เป็น audit trail) แต่โชว์แยกคอลัมน์ "คืนแล้ว" กับ "คงเหลือสุทธิ" แทน
+                        const stockInOfWarehouse = item.warehouse === 'solar' ? cacheSolar.stockIn : cacheNormal.stockIn;
+                        const returnedForThisItem = stockInOfWarehouse
+                            .filter(t => t.productId === item.productId && (t.remark || '').includes(`รับคืนจากบิล ${group.orderId}`))
+                            .reduce((sum, t) => sum + (parseFloat(t.qty) || 0), 0);
+                        byUser[userName].products[productKey].returnedQty += returnedForThisItem;
                     });
                 });
 
@@ -3138,14 +3146,19 @@
                 const container = document.getElementById('print-requester-body');
                 container.innerHTML = Object.keys(byUser).sort((a, b) => a.localeCompare(b, 'th')).map(userName => {
                     const data = byUser[userName];
-                    const productRows = Object.values(data.products).map((p, idx) => `
+                    const productRows = Object.values(data.products).map((p, idx) => {
+                        const netQty = p.qty - p.returnedQty;
+                        return `
                         <tr>
                             <td class="border border-slate-800 p-1.5 text-center">${idx + 1}</td>
                             <td class="border border-slate-800 p-1.5">${p.name} <span class="text-[8px] text-slate-500">(${p.warehouse === 'solar' ? 'คลังโซล่าเซลล์' : 'คลังทั่วไป'})</span></td>
                             <td class="border border-slate-800 p-1.5 text-center font-bold">${p.qty}</td>
+                            <td class="border border-slate-800 p-1.5 text-center ${p.returnedQty > 0 ? 'font-bold' : 'text-slate-400'}">${p.returnedQty > 0 ? p.returnedQty : '-'}</td>
+                            <td class="border border-slate-800 p-1.5 text-center font-bold">${netQty}</td>
                             <td class="border border-slate-800 p-1.5 text-center">${p.unit}</td>
                             <td class="border border-slate-800 p-1.5 text-center text-[9px]">${Array.from(p.orderIds).join(', ')}</td>
-                        </tr>`).join('');
+                        </tr>`;
+                    }).join('');
 
                     return `
                     <div class="mb-8 break-inside-avoid">
@@ -3158,9 +3171,11 @@
                                 <tr>
                                     <th class="border border-slate-800 p-1.5 text-center w-8">ลำดับ</th>
                                     <th class="border border-slate-800 p-1.5 text-center">รหัส - ชื่อสินค้า</th>
-                                    <th class="border border-slate-800 p-1.5 text-center w-16">จำนวนรวม</th>
-                                    <th class="border border-slate-800 p-1.5 text-center w-14">หน่วย</th>
-                                    <th class="border border-slate-800 p-1.5 text-center w-32">เลขที่บิลที่เกี่ยวข้อง</th>
+                                    <th class="border border-slate-800 p-1.5 text-center w-14">จำนวนที่เบิก</th>
+                                    <th class="border border-slate-800 p-1.5 text-center w-14">คืนแล้ว</th>
+                                    <th class="border border-slate-800 p-1.5 text-center w-16">คงเหลือสุทธิ</th>
+                                    <th class="border border-slate-800 p-1.5 text-center w-12">หน่วย</th>
+                                    <th class="border border-slate-800 p-1.5 text-center w-28">เลขที่บิลที่เกี่ยวข้อง</th>
                                 </tr>
                             </thead>
                             <tbody>${productRows}</tbody>
