@@ -115,37 +115,46 @@
             box-shadow: inset 4px 4px 8px #d1d9e6, inset -4px -4px 8px #ffffff;
         }
 
-        /* 🌟 [อัปเกรด] เปลี่ยนจาก "ซ่อนสกอลบาร์ทั้งหมด" เป็น "โชว์สกอลบาร์แบบบางสวยงาม กดลากเลื่อนขึ้น-ลงได้"
-           ใช้กับทุกจุดในหน้าเว็บที่มีการเลื่อน ไม่ใช่แค่จุดที่เคยใช้ class .scrollbar-hidden เท่านั้น */
-        ::-webkit-scrollbar {
+        /* 🌟 [ปรับใหม่ตามที่ขอ] scrollbar-hidden = ซ่อนสกอลบาร์ (ใช้กับเมนูด้านข้าง/ส่วนอื่นๆ ที่ไม่ใช่ตารางข้อมูล) */
+        .scrollbar-hidden::-webkit-scrollbar {
+            display: none;
+        }
+
+        .scrollbar-hidden {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* 🌟 [ปรับใหม่ตามที่ขอ] custom-scrollbar = โชว์สกอลบาร์บางสวยงาม กดลากเลื่อนได้ ขอบมนเข้ากับธีมแอป
+           ใช้กับกล่องเนื้อหาหลักที่มีการเลื่อนจริง (ไม่ใช้สกอลบาร์เหลี่ยมๆ ปุ่มลูกศรแบบ default ของเบราว์เซอร์) */
+        .custom-scrollbar::-webkit-scrollbar {
             width: 10px;
             height: 10px;
         }
 
-        ::-webkit-scrollbar-track {
+        .custom-scrollbar::-webkit-scrollbar-track {
             background: transparent;
         }
 
-        ::-webkit-scrollbar-thumb {
+        .custom-scrollbar::-webkit-scrollbar-thumb {
             background-color: #b8c2d1;
             border-radius: 10px;
             border: 2px solid transparent;
             background-clip: padding-box;
         }
 
-        ::-webkit-scrollbar-thumb:hover {
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
             background-color: #94a3b8;
         }
 
-        html {
-            scrollbar-width: thin;
-            scrollbar-color: #b8c2d1 transparent;
+        /* 🎯 [แก้ตามภาพที่ส่งมา] ซ่อนปุ่มลูกศรขึ้น-ลงเหลี่ยมๆ ของสกอลบาร์ default ทิ้ง ให้เหลือแค่แท่งเลื่อนมนๆ เกลี้ยงๆ */
+        .custom-scrollbar::-webkit-scrollbar-button {
+            display: none;
+            height: 0;
+            width: 0;
         }
 
-        /* เดิม class นี้ใช้ซ่อนสกอลบาร์ (display:none) ตอนนี้เปลี่ยนพฤติกรรมแล้ว
-           ตั้งใจเก็บชื่อ class เดิมไว้ (ไม่ต้องไปแก้ HTML ที่ใช้ class นี้อยู่หลายจุด)
-           แต่ปล่อยให้รับสไตล์สกอลบาร์สวยๆ จากกฎ ::-webkit-scrollbar ด้านบนแทนการซ่อน */
-        .scrollbar-hidden {
+        .custom-scrollbar {
             scrollbar-width: thin;
             scrollbar-color: #b8c2d1 transparent;
         }
@@ -504,6 +513,61 @@
             body.print-bill-active .modal-action-cell {
                 display: none !important;
             }
+
+            /* 🎯 [ปรับตามที่ขอ] บีบขนาด/ระยะห่างของใบเบิกให้กระชับขึ้นเฉพาะตอนพิมพ์เท่านั้น
+               (หน้าจอปกติตอนดูในแอปยังเหมือนเดิมทุกอย่าง ไม่กระทบ) เพื่อให้พอดีหน้า A4 มากขึ้นเวลามีรายการเยอะ */
+            #modal-container {
+                padding: 16px !important;
+            }
+
+            #modal-container h3,
+            #modal-container h3 span {
+                font-size: 15px !important;
+            }
+
+            #modal-container p.text-sm {
+                font-size: 10px !important;
+                margin-top: 2px !important;
+            }
+
+            #modal-container>.grid {
+                padding: 10px !important;
+                margin-bottom: 10px !important;
+                font-size: 10px !important;
+                gap: 6px !important;
+            }
+
+            #modal-table-container {
+                padding: 0 !important;
+                margin-bottom: 8px !important;
+            }
+
+            #modal-table-container table {
+                font-size: 9px !important;
+            }
+
+            #modal-table-container th,
+            #modal-table-container td {
+                padding: 3px 6px !important;
+            }
+
+            #modal-signature-block {
+                margin-top: 4px !important;
+                padding-top: 8px !important;
+            }
+
+            #modal-signature-block p {
+                margin-top: 2px !important;
+                font-size: 10px !important;
+            }
+
+            #modal-signature-block .mt-8 {
+                margin-top: 16px !important;
+            }
+
+            #modal-signature-block .mt-3 {
+                margin-top: 4px !important;
+            }
         }
     </style>
 </head>
@@ -641,7 +705,7 @@
             </button>
         </div>
 
-        <div class="flex-1 h-full overflow-y-auto scrollbar-hidden neu-card p-4 md:p-8 bg-[#eef2f7]">
+        <div class="flex-1 h-full overflow-y-auto custom-scrollbar neu-card p-4 md:p-8 bg-[#eef2f7]">
             <div class="w-full max-w-4xl mx-auto">
 
                 <section id="page-products" class="page-content block">
@@ -777,7 +841,7 @@
                                             placeholder="พิมพ์ รหัส หรือ ชื่อ หรือ ยิงบาร์โค้ด..." autocomplete="off">
                                         <input type="hidden" id="in-product">
                                         <ul id="in-smart-dropdown"
-                                            class="absolute z-50 w-full mt-2 bg-white/95 backdrop-blur-md border border-slate-200 rounded-xl shadow-xl max-h-60 overflow-y-auto hidden divide-y divide-slate-100">
+                                            class="scrollbar-hidden absolute z-50 w-full mt-2 bg-white/95 backdrop-blur-md border border-slate-200 rounded-xl shadow-xl max-h-60 overflow-y-auto hidden divide-y divide-slate-100">
                                         </ul>
                                     </div>
                                 </div>
@@ -913,7 +977,7 @@
                                                 placeholder="พิมพ์ รหัส/ชื่อ หรือ ยิงบาร์โค้ด..." autocomplete="off">
                                             <input type="hidden" id="out-product">
                                             <ul id="out-smart-dropdown"
-                                                class="absolute z-50 w-full mt-2 bg-white/95 backdrop-blur-md border border-slate-200 rounded-xl shadow-xl max-h-60 overflow-y-auto hidden divide-y divide-slate-100">
+                                                class="scrollbar-hidden absolute z-50 w-full mt-2 bg-white/95 backdrop-blur-md border border-slate-200 rounded-xl shadow-xl max-h-60 overflow-y-auto hidden divide-y divide-slate-100">
                                             </ul>
                                         </div>
                                     </div>
@@ -963,7 +1027,7 @@
                                 id="cart-count">มีทั้งหมด 0 รายการ</span>
                         </div>
                         <div
-                            class="overflow-x-auto mb-6 bg-[#eef2f7] rounded-xl shadow-[inset_2px_2px_5px_#d1d9e6,inset_-2px_-2px_5px_#ffffff] p-1.5">
+                            class="scrollbar-hidden overflow-x-auto mb-6 bg-[#eef2f7] rounded-xl shadow-[inset_2px_2px_5px_#d1d9e6,inset_-2px_-2px_5px_#ffffff] p-1.5">
                             <table class="w-full text-left text-xs">
                                 <thead class="text-slate-500 uppercase font-bold border-b border-slate-300/40">
                                     <tr>
@@ -1284,7 +1348,7 @@
                                     class="w-full pl-10 pr-4 py-3 neu-input rounded-xl text-sm font-medium text-blue-800"
                                     placeholder="พิมพ์ รหัส หรือ ชื่อสินค้าเพื่อเพิ่มลงตาราง..." autocomplete="off">
                                 <ul id="sv-smart-dropdown"
-                                    class="absolute z-50 w-full mt-2 bg-white/95 backdrop-blur-md border border-slate-200 rounded-xl shadow-xl max-h-60 overflow-y-auto hidden divide-y divide-slate-100">
+                                    class="scrollbar-hidden absolute z-50 w-full mt-2 bg-white/95 backdrop-blur-md border border-slate-200 rounded-xl shadow-xl max-h-60 overflow-y-auto hidden divide-y divide-slate-100">
                                 </ul>
                             </div>
                             <div class="bg-white rounded-2xl shadow-inner border border-slate-200 overflow-hidden">
@@ -1797,7 +1861,7 @@
                             <span class="text-xs font-bold text-slate-700 flex items-center"><i data-lucide="list"
                                     class="w-4 h-4 mr-2 text-slate-500"></i>รายการเคลื่อนไหว (เรียงจากล่าสุด)</span>
                         </div>
-                        <div class="overflow-x-auto max-h-[300px] overflow-y-auto scrollbar-hidden">
+                        <div class="custom-scrollbar overflow-x-auto max-h-[300px] overflow-y-auto">
                             <table class="w-full text-left text-xs">
                                 <thead
                                     class="text-slate-500 uppercase font-bold sticky top-0 bg-slate-100 z-10 shadow-sm">
@@ -1849,7 +1913,7 @@
                             data-lucide="x" class="w-6 h-6"></i></button>
                 </div>
 
-                <div class="p-6 overflow-y-auto flex-1 scrollbar-hidden">
+                <div class="p-6 overflow-y-auto flex-1 custom-scrollbar">
                     <div
                         class="flex items-center space-x-3 mb-6 bg-white p-2 pl-4 rounded-2xl shadow-sm border border-slate-200">
                         <i data-lucide="barcode" class="w-5 h-5 text-slate-400"></i>
@@ -2200,10 +2264,12 @@
                 const btnNormal = document.getElementById('btn-picker-normal');
                 const btnSolar = document.getElementById('btn-picker-solar');
                 if (!btnNormal || !btnSolar) return;
-                const activeClass = "px-4 py-2 text-xs font-bold rounded-lg transition-all bg-white text-blue-600 shadow-sm";
+                // 🎯 [แก้สี] คลังทั่วไป = ฟ้า, คลังโซล่า = ส้ม ให้ตรงกับธีมสีที่ใช้ทั้งแอป (เหมือนปุ่ม btn-mode-normal/btn-mode-solar)
+                const activeClassNormal = "px-4 py-2 text-xs font-bold rounded-lg transition-all bg-white text-blue-600 shadow-sm";
+                const activeClassSolar = "px-4 py-2 text-xs font-bold rounded-lg transition-all bg-white text-orange-600 shadow-sm";
                 const inactiveClass = "px-4 py-2 text-xs font-bold rounded-lg transition-all text-slate-500 hover:text-slate-700";
-                btnNormal.className = cartPickerWarehouse === 'normal' ? activeClass : inactiveClass;
-                btnSolar.className = cartPickerWarehouse === 'solar' ? activeClass : inactiveClass;
+                btnNormal.className = cartPickerWarehouse === 'normal' ? activeClassNormal : inactiveClass;
+                btnSolar.className = cartPickerWarehouse === 'solar' ? activeClassSolar : inactiveClass;
             }
 
             // สลับคลังที่กำลังหยิบสินค้าลงตะกร้า — โหลดข้อมูลคลังนั้นให้อัตโนมัติถ้ายังไม่เคยโหลด
@@ -2657,7 +2723,7 @@
 
                     // 🌟 [อัปเกรด] ป้ายบอกว่ารายการนี้มาจากคลังไหน (สำคัญเมื่อบิลมีของข้ามคลังปนกัน)
                     const warehouseBadgeHtml = itemWarehouse === 'solar'
-                        ? `<span class="ml-1.5 inline-flex items-center text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 border border-amber-200 align-middle">โซล่า</span>`
+                        ? `<span class="ml-1.5 inline-flex items-center text-[9px] font-bold px-1.5 py-0.5 rounded bg-orange-100 text-orange-700 border border-orange-200 align-middle">โซล่า</span>`
                         : `<span class="ml-1.5 inline-flex items-center text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 border border-blue-200 align-middle">ทั่วไป</span>`;
 
                     // 🌟 2. สร้างปุ่มแนบรูปลิงก์ (จะโชว์เฉพาะงานซ่อมเท่านั้น)
@@ -3183,7 +3249,7 @@
                         return `
                         <tr>
                             <td class="border border-slate-800 p-1.5 text-center">${idx + 1}</td>
-                            <td class="border border-slate-800 p-1.5">${p.name} <span class="text-[8px] text-slate-500">(${p.warehouse === 'solar' ? 'คลังโซล่าเซลล์' : 'คลังทั่วไป'})</span></td>
+                            <td class="border border-slate-800 p-1.5">${p.name} <span class="text-[8px] font-bold ${p.warehouse === 'solar' ? 'text-orange-600' : 'text-blue-600'}">(${p.warehouse === 'solar' ? 'คลังโซล่าเซลล์' : 'คลังทั่วไป'})</span></td>
                             <td class="border border-slate-800 p-1.5 text-center font-bold">${p.qty}</td>
                             <td class="border border-slate-800 p-1.5 text-center ${p.returnedQty > 0 ? 'font-bold' : 'text-slate-400'}">${p.returnedQty > 0 ? p.returnedQty : '-'}</td>
                             <td class="border border-slate-800 p-1.5 text-center font-bold">${netQty}</td>
@@ -3599,7 +3665,7 @@
 
                     // 🌟 [อัปเกรด] ป้ายบอกคลังต้นทางของแต่ละรายการ (สำคัญมากขึ้นตอนนี้ที่บิลเดียวอาจมีของข้ามคลังปนกัน)
                     const itemWarehouseBadge = item.warehouse === 'solar'
-                        ? `<span class="ml-1.5 inline-flex items-center text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 border border-amber-200 align-middle">โซล่า</span>`
+                        ? `<span class="ml-1.5 inline-flex items-center text-[9px] font-bold px-1.5 py-0.5 rounded bg-orange-100 text-orange-700 border border-orange-200 align-middle">โซล่า</span>`
                         : `<span class="ml-1.5 inline-flex items-center text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 border border-blue-200 align-middle">ทั่วไป</span>`;
 
                     // 🌟 [อัปเกรด] คำนวณว่าสินค้าตัวนี้ในบิลนี้ ถูก "คืนเข้าคลัง" ไปแล้วเท่าไหร่
