@@ -4820,14 +4820,41 @@
                 }
 
                 try {
-                    html5QrScanner = new Html5Qrcode("camera-scanner-viewport");
+                    // 🎯 [แก้บั๊ก] ระบุ format บาร์โค้ดที่ต้องการให้ชัดเจน + เปิดใช้ตัวสแกนของเบราว์เซอร์เอง (ถ้ารองรับ)
+                    // ซึ่งแม่นและเร็วกว่าตัวสแกนของไลบรารีเองมากสำหรับบาร์โค้ดเส้นตรง (Code128/EAN/UPC)
+                    const formatsToSupport = [
+                        Html5QrcodeSupportedFormats.CODE_128,
+                        Html5QrcodeSupportedFormats.CODE_39,
+                        Html5QrcodeSupportedFormats.CODE_93,
+                        Html5QrcodeSupportedFormats.EAN_13,
+                        Html5QrcodeSupportedFormats.EAN_8,
+                        Html5QrcodeSupportedFormats.UPC_A,
+                        Html5QrcodeSupportedFormats.UPC_E,
+                        Html5QrcodeSupportedFormats.CODABAR,
+                        Html5QrcodeSupportedFormats.ITF,
+                        Html5QrcodeSupportedFormats.QR_CODE
+                    ];
+
+                    html5QrScanner = new Html5Qrcode("camera-scanner-viewport", {
+                        formatsToSupport: formatsToSupport,
+                        useBarCodeDetectorIfSupported: true, // ใช้ BarcodeDetector ของเบราว์เซอร์ถ้ารองรับ (เร็ว/แม่นกว่า)
+                        experimentalFeatures: { useBarCodeDetectorIfSupported: true }, // เผื่อเวอร์ชันไลบรารีเก่ากว่าที่ยังใช้ชื่อนี้
+                        verbose: false
+                    });
+
                     await html5QrScanner.start(
                         { facingMode: "environment" }, // ใช้กล้องหลัง (หันออก) เป็นค่าเริ่มต้น
-                        { fps: 10, qrbox: { width: 250, height: 150 } },
+                        {
+                            fps: 10,
+                            // 🎯 [แก้บั๊ก] กล่องสแกนแนวนอน (กว้างกว่าสูง) เหมาะกับบาร์โค้ดเส้นตรงมากกว่ากรอบสี่เหลี่ยมจัตุรัสเดิม
+                            qrbox: { width: 280, height: 140 },
+                            aspectRatio: 1.7777778, // บังคับอัตราส่วนกล้องเป็น 16:9 ช่วยให้ภาพคมชัดขึ้น อ่านง่ายขึ้น
+                            disableFlip: false
+                        },
                         (decodedText) => { onBarcodeScanned(decodedText); },
                         () => { /* เฟรมที่สแกนไม่เจอบาร์โค้ด ไม่ต้องทำอะไร รอเฟรมถัดไปเฉยๆ */ }
                     );
-                    statusEl.innerText = "เล็งกล้องไปที่บาร์โค้ด...";
+                    statusEl.innerText = "เล็งกล้องให้บาร์โค้ดอยู่ในกรอบ ห่างพอประมาณ แสงสว่างเพียงพอ";
                 } catch (err) {
                     console.error(err);
                     statusEl.innerText = "เปิดกล้องไม่สำเร็จ";
