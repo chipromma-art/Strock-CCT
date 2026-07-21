@@ -11,7 +11,6 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap');
 
@@ -838,14 +837,8 @@
                                         </div>
                                         <input type="text" id="in-smart-search" oninput="handleSmartSearchIn()"
                                             onfocus="handleSmartSearchIn()" onkeydown="handleBarcodeEnter(event, 'in')"
-                                            class="w-full pl-10 pr-12 py-3 neu-input rounded-xl text-sm font-medium text-blue-800"
+                                            class="w-full pl-10 pr-4 py-3 neu-input rounded-xl text-sm font-medium text-blue-800"
                                             placeholder="พิมพ์ รหัส หรือ ชื่อ หรือ ยิงบาร์โค้ด..." autocomplete="off">
-                                        <!-- 🌟 [อัปเกรด] ปุ่มเปิดกล้องสแกนบาร์โค้ด -->
-                                        <button type="button" onclick="openBarcodeScanner('in-smart-search')"
-                                            class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-blue-500 hover:text-blue-700 transition-colors"
-                                            title="สแกนด้วยกล้อง">
-                                            <i data-lucide="camera" class="h-4 w-4"></i>
-                                        </button>
                                         <input type="hidden" id="in-product">
                                         <ul id="in-smart-dropdown"
                                             class="scrollbar-hidden absolute z-50 w-full mt-2 bg-white/95 backdrop-blur-md border border-slate-200 rounded-xl shadow-xl max-h-60 overflow-y-auto hidden divide-y divide-slate-100">
@@ -980,14 +973,8 @@
                                             <input type="text" id="out-smart-search" oninput="handleSmartSearch()"
                                                 onfocus="handleSmartSearch()"
                                                 onkeydown="handleBarcodeEnter(event, 'out')"
-                                                class="w-full pl-10 pr-12 py-3 neu-input rounded-xl text-sm font-medium text-blue-800"
+                                                class="w-full pl-10 pr-4 py-3 neu-input rounded-xl text-sm font-medium text-blue-800"
                                                 placeholder="พิมพ์ รหัส/ชื่อ หรือ ยิงบาร์โค้ด..." autocomplete="off">
-                                            <!-- 🌟 [อัปเกรด] ปุ่มเปิดกล้องสแกนบาร์โค้ด -->
-                                            <button type="button" onclick="openBarcodeScanner('out-smart-search')"
-                                                class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-blue-500 hover:text-blue-700 transition-colors"
-                                                title="สแกนด้วยกล้อง">
-                                                <i data-lucide="camera" class="h-4 w-4"></i>
-                                            </button>
                                             <input type="hidden" id="out-product">
                                             <ul id="out-smart-dropdown"
                                                 class="scrollbar-hidden absolute z-50 w-full mt-2 bg-white/95 backdrop-blur-md border border-slate-200 rounded-xl shadow-xl max-h-60 overflow-y-auto hidden divide-y divide-slate-100">
@@ -1768,28 +1755,6 @@
             </div>
         </div>
 
-        <!-- 🌟 [อัปเกรด] หน้าต่างสแกนบาร์โค้ดผ่านกล้อง -->
-        <div id="camera-scanner-modal"
-            class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-[10001] flex items-center justify-center hidden opacity-0 transition-opacity duration-300 p-4">
-            <div
-                class="bg-[#eef2f7] rounded-3xl shadow-2xl w-full max-w-sm p-5 transform transition-all scale-95 dark:bg-slate-800">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="font-bold text-slate-800 flex items-center space-x-2 dark:text-slate-100">
-                        <i data-lucide="camera" class="w-5 h-5 text-blue-600"></i>
-                        <span>สแกนบาร์โค้ดด้วยกล้อง</span>
-                    </h3>
-                    <button onclick="closeBarcodeScanner()"
-                        class="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"><i
-                            data-lucide="x" class="w-5 h-5"></i></button>
-                </div>
-                <div id="camera-scanner-viewport"
-                    class="w-full rounded-2xl overflow-hidden bg-black min-h-[260px] flex items-center justify-center">
-                </div>
-                <p id="camera-scanner-status" class="text-center text-xs text-slate-500 mt-3 font-medium">กำลังเปิดกล้อง...
-                </p>
-            </div>
-        </div>
-
         <div id="custom-prompt-modal"
             class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[10000] flex items-center justify-center hidden opacity-0 transition-opacity duration-300 p-4">
             <div
@@ -1956,12 +1921,6 @@
                             placeholder="ยิงบาร์โค้ด หรือพิมพ์รหัสสินค้าที่นี่ แล้วกด Enter..."
                             class="w-full bg-transparent border-none focus:ring-0 text-slate-700 font-medium placeholder-slate-400 py-2"
                             onkeypress="if(event.key === 'Enter') addProductToAudit(this.value)">
-                        <!-- 🌟 [อัปเกรด] ปุ่มเปิดกล้องสแกนบาร์โค้ด -->
-                        <button type="button" onclick="openBarcodeScanner('audit-barcode-input', 'addProductToAudit')"
-                            class="p-2.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors"
-                            title="สแกนด้วยกล้อง">
-                            <i data-lucide="camera" class="w-5 h-5"></i>
-                        </button>
                         <button onclick="addProductToAudit(document.getElementById('audit-barcode-input').value)"
                             class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-xl font-bold transition-colors">ดึงข้อมูล</button>
                     </div>
@@ -4789,96 +4748,6 @@
                     result += charMap[text[i]] || text[i];
                 }
                 return result;
-            }
-
-            // ============================================================
-            // 🌟 [อัปเกรด] ระบบสแกนบาร์โค้ดผ่านกล้องมือถือ/เว็บแคม (ไม่ต้องพกเครื่องสแกนแยก)
-            // ใช้ไลบรารี html5-qrcode รองรับ Code128, EAN-13, EAN-8, UPC ฯลฯ
-            // ทำงานร่วมกับ logic เดิมที่มีอยู่แล้วทั้งหมด (จำลองการกด Enter เหมือนเครื่องสแกนจริง)
-            // ============================================================
-            let html5QrScanner = null;
-            let scannerTargetInputId = null;
-            let scannerTargetCallback = null;
-
-            // เปิดกล้องสแกน — targetInputId คือช่องที่จะเอาผลลัพธ์ไปใส่
-            // callbackFnName (ถ้ามี) คือชื่อฟังก์ชันที่จะเรียกทันทีหลังสแกนเสร็จ แทนการจำลองกด Enter
-            async function openBarcodeScanner(targetInputId, callbackFnName) {
-                scannerTargetInputId = targetInputId;
-                scannerTargetCallback = callbackFnName || null;
-
-                const modal = document.getElementById('camera-scanner-modal');
-                const statusEl = document.getElementById('camera-scanner-status');
-                modal.classList.remove('hidden');
-                setTimeout(() => modal.classList.remove('opacity-0'), 10);
-                statusEl.innerText = "กำลังเปิดกล้อง...";
-                if (typeof lucide !== 'undefined') lucide.createIcons();
-
-                if (typeof Html5Qrcode === 'undefined') {
-                    statusEl.innerText = "โหลดไลบรารีสแกนไม่สำเร็จ (เช็คอินเทอร์เน็ต)";
-                    showToast("ไม่พบไลบรารีสแกนบาร์โค้ด กรุณาเช็คอินเทอร์เน็ต", "error");
-                    return;
-                }
-
-                try {
-                    // 🎯 [แก้บั๊กตามที่ทดสอบจริง] อาการ "อ่านได้แค่บาร์ใหญ่ๆ ห่างๆ" คือสัญญาณชัดเจนว่ากล้องได้ความละเอียดต่ำเกินไป
-                    // เส้นบาร์โค้ดที่ถี่/ละเอียดต้องการความละเอียดวิดีโอสูงถึงจะแยกเส้นออกจากกันได้
-                    // ตอนนี้บังคับขอความละเอียดสูงสุดเท่าที่กล้องรองรับ (สูงสุด 1920x1080) ผ่าน videoConstraints
-                    // 🎯 ตัดเรื่อง formatsToSupport/useBarCodeDetectorIfSupported ออก (มีบั๊กที่รู้จักกันตอนใช้ร่วมกัน) กลับไปใช้ค่าเริ่มต้นที่เสถียรที่สุด
-                    html5QrScanner = new Html5Qrcode("camera-scanner-viewport", { verbose: false });
-
-                    await html5QrScanner.start(
-                        { facingMode: "environment" }, // ใช้กล้องหลัง (หันออก) เป็นค่าเริ่มต้น
-                        {
-                            fps: 10,
-                            // 🎯 กล่องสแกนแนวนอน (กว้างกว่าสูง) เหมาะกับบาร์โค้ดเส้นตรงมากกว่ากรอบสี่เหลี่ยมจัตุรัสเดิม
-                            qrbox: { width: 300, height: 150 },
-                            disableFlip: false,
-                            // 🎯 [แก้บั๊กหลัก] ขอความละเอียดกล้องสูงสุด — ตัวนี้คือจุดที่แก้อาการอ่านบาร์ถี่ไม่ได้
-                            videoConstraints: {
-                                facingMode: "environment",
-                                width: { min: 640, ideal: 1920, max: 1920 },
-                                height: { min: 480, ideal: 1080, max: 1080 }
-                            }
-                        },
-                        (decodedText) => { onBarcodeScanned(decodedText); },
-                        () => { /* เฟรมที่สแกนไม่เจอบาร์โค้ด ไม่ต้องทำอะไร รอเฟรมถัดไปเฉยๆ */ }
-                    );
-                    statusEl.innerText = "เล็งกล้องให้บาร์โค้ดอยู่ในกรอบ ห่างพอประมาณ แสงสว่างเพียงพอ";
-                } catch (err) {
-                    console.error(err);
-                    statusEl.innerText = "เปิดกล้องไม่สำเร็จ";
-                    showToast("เปิดกล้องไม่สำเร็จ: ตรวจสอบว่าอนุญาตสิทธิ์กล้องให้เว็บนี้แล้วหรือยัง", "error");
-                }
-            }
-
-            // พอสแกนเจอบาร์โค้ด — เอาค่าไปใส่ในช่องเดิม แล้วประมวลผลเหมือนใช้เครื่องสแกนจริง
-            function onBarcodeScanned(decodedText) {
-                const inputEl = document.getElementById(scannerTargetInputId);
-                if (inputEl) {
-                    inputEl.value = decodedText;
-                    inputEl.focus();
-                    if (scannerTargetCallback && typeof window[scannerTargetCallback] === 'function') {
-                        window[scannerTargetCallback](decodedText);
-                    } else {
-                        // จำลองการกด Enter เหมือนเครื่องสแกนจริงส่งมา ให้ไปเข้า logic เดิมที่มีอยู่แล้วทุกจุดโดยไม่ต้องเขียนซ้ำ
-                        inputEl.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
-                    }
-                }
-                if (navigator.vibrate) navigator.vibrate(80); // สั่นเบาๆ ตอนสแกนสำเร็จ (ถ้าเครื่องรองรับ)
-                showToast(`📷 สแกนสำเร็จ: ${decodedText}`, "success");
-                closeBarcodeScanner();
-            }
-
-            // ปิดกล้อง + คืนทรัพยากรกล้องให้เรียบร้อย (สำคัญมาก ไม่งั้นกล้องจะค้างเปิดอยู่เบื้องหลัง)
-            function closeBarcodeScanner() {
-                const modal = document.getElementById('camera-scanner-modal');
-                modal.classList.add('opacity-0');
-                setTimeout(() => modal.classList.add('hidden'), 300);
-
-                if (html5QrScanner) {
-                    html5QrScanner.stop().then(() => html5QrScanner.clear()).catch(() => { });
-                    html5QrScanner = null;
-                }
             }
 
             // 🌟 ระบบดักจับปืนสแกนเนอร์อัตโนมัติ (Global Barcode Listener)
