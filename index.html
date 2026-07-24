@@ -334,6 +334,18 @@
                 background: #fff !important;
             }
 
+            /* 🌟 [อัปเกรด] โหมดพิมพ์รายงานยอดสินค้าคงเหลือในคลัง */
+            body.print-stockbalance-active > *:not(#print-stockbalance-template) {
+                display: none !important;
+            }
+
+            body.print-stockbalance-active #print-stockbalance-template {
+                display: block !important;
+                position: relative !important;
+                width: 100% !important;
+                background: #fff !important;
+            }
+
             body:not(.print-survey-active) aside,
             body:not(.print-survey-active) header,
             body:not(.print-survey-active) .no-print {
@@ -714,7 +726,7 @@
                         <div class="flex items-center space-x-3">
                             <button id="btn-print-pdf" onclick="downloadProductFormPDF()"
                                 class="hidden px-4 py-2 bg-white text-orange-600 border border-orange-200 hover:bg-orange-50 text-xs font-bold rounded-xl flex items-center space-x-2 transition-colors shadow-sm">
-                                <i data-lucide="printer" class="w-4 h-4"></i><span>ปริ้นท์ฟอร์มเบิก (Solar)</span>
+                                <i data-lucide="printer" class="w-4 h-4"></i><span>ฟอร์มเบิก</span>
                             </button>
                             <span id="form-mode-title"
                                 class="text-xs bg-blue-100 text-blue-800 border border-blue-200 px-3 py-1 rounded-full font-bold shadow-sm">โหมด:
@@ -1115,22 +1127,30 @@
                 </section>
 
                 <section id="page-report" class="page-content hidden">
-                    <h2 class="text-xl font-bold text-slate-800 mb-6" id="title-page-report">
-                        รายงานยอดสินค้าคงเหลือในคลัง
-                    </h2>
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-xl font-bold text-slate-800" id="title-page-report">
+                            รายงานยอดสินค้าคงเหลือในคลัง
+                        </h2>
+                        <!-- 🌟 [จัดใหม่] ย้ายปุ่มออกรายงาน PDF ขึ้นมามุมบนขวา เหนือแถบค้นหา -->
+                        <!-- 🎯 [แก้สี] เพิ่ม id ให้ JS สลับสีตามคลังที่เปิดอยู่ได้ (ฟ้า=ทั่วไป, ส้ม=โซล่า) -->
+                        <button id="btn-report-pdf" onclick="printStockBalanceReport()"
+                            class="px-3 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-xs font-bold rounded-xl flex items-center space-x-1.5 transition-all shadow-sm whitespace-nowrap shrink-0">
+                            <i data-lucide="printer" class="w-4 h-4"></i><span>ออกรายงาน</span>
+                        </button>
+                    </div>
                     <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-5">
                         <div class="flex flex-wrap items-center gap-2 text-xs font-bold flex-1">
                             <span class="text-slate-400 mr-1">กรองตาราง:</span>
                             <button onclick="setFilter('all')" id="filter-all"
                                 class="neu-btn px-3 py-2 rounded-xl text-slate-600 active whitespace-nowrap">ทั้งหมด</button>
                             <button onclick="setFilter('sort-desc')" id="filter-sort"
-                                class="neu-btn px-3 py-2 rounded-xl text-slate-600 whitespace-nowrap">คงเหลือ มาก ➔
+                                class="neu-btn px-3 py-2 rounded-xl text-slate-600 whitespace-nowrap">มาก ➔
                                 น้อย</button>
                             <button onclick="setFilter('alert-only')" id="filter-alert"
                                 class="neu-btn px-3 py-2 rounded-xl text-rose-600 whitespace-nowrap">🚨 ใกล้หมด</button>
                             <button id="btn-filter-ofc" onclick="setFilter('ofc')"
                                 class="px-3 py-2 bg-white text-slate-600 border border-slate-200 hover:bg-amber-50 hover:text-amber-600 hover:border-amber-200 text-xs font-bold rounded-xl flex items-center space-x-1.5 transition-all shadow-sm whitespace-nowrap">
-                                <i data-lucide="package" class="w-4 h-4 text-amber-500"></i><span>Material OFC</span>
+                                <i data-lucide="package" class="w-4 h-4 text-amber-500"></i><span>OFC</span>
                             </button>
                             <button id="btn-filter-repair" onclick="setFilter('repair')"
                                 class="px-3 py-2 bg-white text-slate-600 border border-slate-200 hover:bg-orange-50 hover:text-orange-600 hover:border-orange-200 text-xs font-bold rounded-xl flex items-center space-x-1.5 transition-all shadow-sm whitespace-nowrap">
@@ -1262,7 +1282,7 @@
                             <!-- 🌟 [อัปเกรด] ปุ่มออกรายงาน PDF สรุปการเบิกตามผู้เบิก (เคารพตัวกรองที่เลือกไว้ปัจจุบัน) -->
                             <button onclick="printRequesterReport()"
                                 class="px-4 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-xs font-bold rounded-xl flex items-center justify-center space-x-2 transition-all shadow-lg shadow-blue-500/30 shrink-0">
-                                <i data-lucide="printer" class="w-3.5 h-3.5"></i><span>ออกรายงาน PDF (สรุปตามผู้เบิก)</span>
+                                <i data-lucide="printer" class="w-3.5 h-3.5"></i><span>สรุปตามผู้เบิก</span>
                             </button>
                         </div>
                         <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
@@ -1310,7 +1330,7 @@
                         <h2 class="text-xl font-bold text-slate-800">ฟอร์มบันทึกการสำรวจ (Solar Survey)</h2>
                         <button onclick="printSurveyReport()"
                             class="px-5 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white text-sm font-bold rounded-xl flex items-center space-x-2 transition-all shadow-lg shadow-orange-500/30"><i
-                                data-lucide="printer" class="w-4 h-4"></i><span>ออกรายงาน PDF</span></button>
+                                data-lucide="printer" class="w-4 h-4"></i><span>ออกรายงาน</span></button>
                     </div>
                     <div
                         class="bg-[#eef2f7] p-6 rounded-3xl shadow-[6px_6px_12px_#d1d9e6,-6px_-6px_12px_#ffffff] border border-white/50 space-y-8">
@@ -1555,6 +1575,40 @@
                 </div>
 
                 <div id="print-requester-body"></div>
+            </div>
+        </div>
+
+        <!-- 🌟 [อัปเกรด] แม่แบบสำหรับพิมพ์รายงานยอดสินค้าคงเหลือในคลัง (PDF) -->
+        <div id="print-stockbalance-template" class="hidden absolute top-0 left-0 bg-white w-full text-black z-[9999]">
+            <div class="relative max-w-[210mm] mx-auto p-6 bg-white">
+                <div class="w-full mb-4 border-b border-slate-800 pb-3">
+                    <div class="flex justify-between items-start">
+                        <div class="text-left mt-1">
+                            <h2 class="text-sm font-black tracking-widest text-slate-800">CCT & CCPT</h2>
+                            <div class="text-[9px] text-blue-600 font-bold uppercase tracking-[0.15em] mt-0.5">STOCK
+                                MANAGEMENT</div>
+                        </div>
+                        <div><img src="https://img2.pic.in.th/S__4325382-removebg-preview51cfea9ad7ac0759.png"
+                                class="h-10 object-contain" alt="Logo"></div>
+                    </div>
+                    <div class="text-center pt-1">
+                        <h1 class="text-lg font-black mb-1 text-slate-800">รายงานยอดสินค้าคงเหลือในคลัง</h1>
+                        <p class="text-xs text-slate-600" id="print-stockbalance-scope"></p>
+                        <p class="text-[10px] text-slate-400" id="print-stockbalance-date"></p>
+                    </div>
+                </div>
+
+                <table class="w-full text-left text-[10px] border-collapse border border-slate-800">
+                    <thead class="bg-slate-50 text-slate-800">
+                        <tr id="print-stockbalance-thead-row"></tr>
+                    </thead>
+                    <tbody id="print-stockbalance-body"></tbody>
+                </table>
+
+                <div class="flex justify-end mt-3 pt-2 border-t border-slate-300">
+                    <p class="text-xs font-bold text-slate-800">มูลค่ารวมทั้งหมด: <span id="print-stockbalance-total"
+                            class="text-emerald-700"></span></p>
+                </div>
             </div>
         </div>
 
@@ -2112,6 +2166,10 @@
                     if (printBtn) printBtn.classList.add('hidden');
                     if (filterOfcBtn) filterOfcBtn.classList.remove('hidden');
 
+                    // 🎯 [แก้สี] ปุ่มออกรายงาน PDF ยอดคงเหลือ — คลังทั่วไป = ฟ้า
+                    const reportPdfBtnN = document.getElementById('btn-report-pdf');
+                    if (reportPdfBtnN) reportPdfBtnN.className = "px-3 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-xs font-bold rounded-xl flex items-center space-x-1.5 transition-all shadow-sm whitespace-nowrap shrink-0";
+
                     // 🔒 2. ซ่อนเมนู Survey เมื่ออยู่คลังปกติ
                     if (surveyTitle) surveyTitle.style.display = 'none';
                     if (surveyTab) surveyTab.style.display = 'none';
@@ -2124,6 +2182,10 @@
                     document.getElementById('btn-add-to-cart-out').className = "neu-btn flex items-center space-x-2 inline-flex px-5 py-2.5 text-sm font-bold text-orange-700 rounded-xl";
                     if (printBtn) printBtn.classList.remove('hidden');
                     if (filterOfcBtn) filterOfcBtn.classList.add('hidden');
+
+                    // 🎯 [แก้สี] ปุ่มออกรายงาน PDF ยอดคงเหลือ — คลังโซล่าเซลล์ = ส้ม
+                    const reportPdfBtnS = document.getElementById('btn-report-pdf');
+                    if (reportPdfBtnS) reportPdfBtnS.className = "px-3 py-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white text-xs font-bold rounded-xl flex items-center space-x-1.5 transition-all shadow-sm whitespace-nowrap shrink-0";
 
                     // ☀️ 3. โชว์เมนู Survey เมื่อเปิดคลัง Solar
                     if (surveyTitle) surveyTitle.style.display = '';
@@ -2848,18 +2910,21 @@
                 renderReportTable();
             }
 
-            function renderReportTable() {
-                const tbody = document.getElementById('report-table-body');
+            // 🌟 [อัปเกรด] สลับโหมดดูรายงานรวม 2 คลัง — โหลดข้อมูลคลังที่ยังไม่เคยโหลดให้อัตโนมัติก่อนแสดงผล
+            // 🌟 แยก logic การกรองสินค้าออกมาเป็นฟังก์ชันกลาง ใช้ร่วมกันทั้งตาราง renderReportTable()
+            // และรายงาน PDF printStockBalanceReport() เพื่อให้ผลลัพธ์ตรงกันเสมอ (เคารพตัวกรอง/ค้นหาเดียวกัน)
+            function getFilteredReportProducts() {
                 const searchInput = document.getElementById('search-report');
-                if (!tbody) return;
                 const searchValue = searchInput ? searchInput.value.trim().toLowerCase() : '';
 
-                const filteredProducts = products.filter(p => {
+                const sourceProducts = products.map(p => ({ ...p, warehouse: currentWarehouseMode }));
+
+                let filteredProducts = sourceProducts.filter(p => {
                     const categoryStr = p.category ? p.category.toLowerCase() : '';
                     const matchSearch = (searchValue === '' || p.id.toLowerCase().includes(searchValue) || p.name.toLowerCase().includes(searchValue) || categoryStr.includes(searchValue));
                     if (!matchSearch) return false;
 
-                    const currentStock = calculateStock(p.id);
+                    const currentStock = calculateStockFor(p.id, p.warehouse);
                     const stockQty = parseInt(currentStock) || 0;
                     const minStock = parseInt(p.min_stock) || 0;
 
@@ -2870,8 +2935,17 @@
                 });
 
                 if (currentFilter === 'sort-desc') {
-                    filteredProducts.sort((a, b) => calculateStock(b.id) - calculateStock(a.id));
+                    filteredProducts.sort((a, b) => calculateStockFor(b.id, b.warehouse) - calculateStockFor(a.id, a.warehouse));
                 }
+
+                return filteredProducts;
+            }
+
+            function renderReportTable() {
+                const tbody = document.getElementById('report-table-body');
+                if (!tbody) return;
+
+                const filteredProducts = getFilteredReportProducts();
 
                 tbody.innerHTML = '';
                 if (filteredProducts.length === 0) {
@@ -2880,7 +2954,7 @@
                 }
 
                 filteredProducts.forEach(p => {
-                    const currentStock = calculateStock(p.id);
+                    const currentStock = calculateStockFor(p.id, p.warehouse);
                     const stockQty = parseInt(currentStock) || 0;
                     const minStock = parseInt(p.min_stock) || 0;
                     const isLowStock = stockQty <= minStock;
@@ -2911,7 +2985,7 @@
                     <td class="p-4 text-sm font-bold text-purple-600 text-right">฿${totalValue.toLocaleString('th-TH', { minimumFractionDigits: 2 })}</td>
                     <td class="p-4 text-center">${statusBadge}</td>
                     <td class="p-4 text-center">
-                        <button onclick="openHistoryModal('${p.id}')" class="p-2.5 bg-white text-blue-600 border border-slate-200 rounded-xl hover:bg-blue-600 hover:text-white hover:shadow-md transition-all group-hover:scale-110" title="ดูประวัติ">
+                        <button onclick="openHistoryModal('${p.id}', '${p.warehouse}')" class="p-2.5 bg-white text-blue-600 border border-slate-200 rounded-xl hover:bg-blue-600 hover:text-white hover:shadow-md transition-all group-hover:scale-110" title="ดูประวัติ">
                             <i data-lucide="search" class="w-4 h-4"></i>
                         </button>
                     </td>
@@ -2919,6 +2993,61 @@
                     tbody.appendChild(tr);
                 });
                 if (typeof lucide !== 'undefined') lucide.createIcons();
+            }
+
+            // 🌟 ออกรายงาน PDF ยอดสินค้าคงเหลือ — เคารพตัวกรอง/ค้นหาที่เลือกไว้ปัจจุบัน (คลังที่กำลังเปิดดูอยู่)
+            function printStockBalanceReport() {
+                const filteredProducts = getFilteredReportProducts();
+                if (filteredProducts.length === 0) {
+                    showToast("ไม่พบข้อมูลสินค้าตามเงื่อนไขที่กรองไว้ ลองปรับตัวกรองดูครับ", "error");
+                    return;
+                }
+
+                const scopeLabel = `ขอบเขต: ${currentWarehouseMode === 'solar' ? 'คลังโซล่าเซลล์' : 'คลังทั่วไป'}`;
+                document.getElementById('print-stockbalance-scope').innerText = scopeLabel;
+                document.getElementById('print-stockbalance-date').innerText = `พิมพ์เมื่อ: ${new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })}`;
+
+                const headerCols = `
+                    <th class="border border-slate-800 p-1.5 text-center w-8">ลำดับ</th>
+                    <th class="border border-slate-800 p-1.5 text-center">รหัส</th>
+                    <th class="border border-slate-800 p-1.5 text-center">ชื่อสินค้า</th>
+                    <th class="border border-slate-800 p-1.5 text-center">ประเภท</th>
+                    <th class="border border-slate-800 p-1.5 text-center">คงเหลือ</th>
+                    <th class="border border-slate-800 p-1.5 text-center">หน่วย</th>
+                    <th class="border border-slate-800 p-1.5 text-center">มูลค่ารวม</th>
+                    <th class="border border-slate-800 p-1.5 text-center">สถานะ</th>
+                `;
+                document.getElementById('print-stockbalance-thead-row').innerHTML = headerCols;
+
+                let totalValueAll = 0;
+                const rows = filteredProducts.map((p, idx) => {
+                    const currentStock = calculateStockFor(p.id, p.warehouse);
+                    const stockQty = parseInt(currentStock) || 0;
+                    const minStock = parseInt(p.min_stock) || 0;
+                    const isLowStock = stockQty <= minStock;
+                    const totalValue = parseFloat(currentStock) * parseFloat(p.cost || 0);
+                    totalValueAll += totalValue;
+
+                    return `
+                    <tr>
+                        <td class="border border-slate-800 p-1.5 text-center">${idx + 1}</td>
+                        <td class="border border-slate-800 p-1.5">${p.id}</td>
+                        <td class="border border-slate-800 p-1.5">${p.name}</td>
+                        <td class="border border-slate-800 p-1.5">${p.category || '-'}</td>
+                        <td class="border border-slate-800 p-1.5 text-center font-bold">${currentStock}</td>
+                        <td class="border border-slate-800 p-1.5 text-center">${p.unit || '-'}</td>
+                        <td class="border border-slate-800 p-1.5 text-right">฿${totalValue.toLocaleString('th-TH', { minimumFractionDigits: 2 })}</td>
+                        <td class="border border-slate-800 p-1.5 text-center">${isLowStock ? 'ใกล้หมด' : 'ปกติ'}</td>
+                    </tr>`;
+                }).join('');
+                document.getElementById('print-stockbalance-body').innerHTML = rows;
+                document.getElementById('print-stockbalance-total').innerText = `฿${totalValueAll.toLocaleString('th-TH', { minimumFractionDigits: 2 })}`;
+
+                document.body.classList.add('print-stockbalance-active');
+                setTimeout(() => {
+                    window.print();
+                    document.body.classList.remove('print-stockbalance-active');
+                }, 300);
             }
 
             // 🌟 ประกาศตัวแปรเก็บกราฟไว้ด้านนอกฟังก์ชัน เพื่อให้ระบบจำกราฟเดิมได้
@@ -4497,8 +4626,13 @@
             }
 
             // 🌟 ฟังก์ชันเปิดหน้าต่างและคำนวณประวัติ (อัปเดตตัดเวลา & คำนวณยอดเงิน)
-            function openHistoryModal(productId) {
-                const p = products.find(prod => prod.id === productId);
+            function openHistoryModal(productId, warehouse) {
+                // 🌟 [อัปเกรด] รองรับดูประวัติของสินค้าจากคลังใดก็ได้ (ใช้กับรายงานแบบรวม 2 คลัง)
+                // ถ้าไม่ระบุคลังมา จะ fallback ไปใช้คลังหลักของแอปเหมือนเดิม (ไม่กระทบของเดิมที่เรียกแบบไม่ส่ง warehouse มา)
+                warehouse = warehouse || currentWarehouseMode;
+                const cache = warehouse === 'solar' ? cacheSolar : cacheNormal;
+
+                const p = cache.products.find(prod => prod.id === productId);
                 if (!p) return;
 
                 const unitCost = parseFloat(p.cost) || 0; // ดึงราคาต้นทุนมาเตรียมคำนวณ
@@ -4510,11 +4644,9 @@
                 imgContainer.innerHTML = p.image ? `<img src="${p.image}" class="w-full h-full object-cover">` : `<i data-lucide="image" class="w-8 h-8 text-slate-300"></i>`;
 
                 let productLogs = [];
-                if (typeof stockInTransactions !== 'undefined' && typeof stockOutTransactions !== 'undefined') {
-                    const inLogs = stockInTransactions.filter(item => item.productId === productId).map(item => ({ ...item, type: 'in', dateObj: new Date(item.date) }));
-                    const outLogs = stockOutTransactions.filter(item => item.productId === productId).map(item => ({ ...item, type: 'out', dateObj: new Date(item.date) }));
-                    productLogs = [...inLogs, ...outLogs];
-                }
+                const inLogs = cache.stockIn.filter(item => item.productId === productId).map(item => ({ ...item, type: 'in', dateObj: new Date(item.date) }));
+                const outLogs = cache.stockOut.filter(item => item.productId === productId).map(item => ({ ...item, type: 'out', dateObj: new Date(item.date) }));
+                productLogs = [...inLogs, ...outLogs];
 
                 productLogs.sort((a, b) => b.dateObj - a.dateObj);
 
