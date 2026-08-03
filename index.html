@@ -740,9 +740,13 @@
 
                             <div>
                                 <label class="block text-xs font-bold text-slate-500 mb-1">รหัสสินค้า</label>
-                                <input type="text" id="p-id" onkeydown="handleProductIdBarcode(event)" required
+                                <input type="text" id="p-id" onkeydown="handleProductIdBarcode(event)"
+                                    oninput="checkDuplicateProductId()" required
                                     class="w-full p-3 neu-input rounded-xl text-sm"
                                     placeholder="พิมพ์ หรือ ยิงบาร์โค้ด...">
+                                <!-- 🌟 [อัปเกรด] คำเตือนรหัสสินค้าซ้ำ โชว์เรียลไทม์ตอนพิมพ์ -->
+                                <p id="p-id-warning" class="text-rose-600 text-xs font-bold mt-1 hidden">⚠️
+                                    รหัสนี้มีอยู่แล้วในระบบ กรุณาใช้รหัสอื่น</p>
                             </div>
 
                             <div>
@@ -2468,6 +2472,31 @@
                 if (typeof lucide !== 'undefined') lucide.createIcons();
             }
 
+            // 🌟 [อัปเกรด] เช็ครหัสสินค้าซ้ำแบบเรียลไทม์ตอนพิมพ์ในช่องรหัสสินค้า
+            // ถ้ากำลังแก้ไขสินค้าเดิมอยู่ (edit-old-id มีค่า) แล้วรหัสยังเป็นรหัสเดิมของตัวเอง จะไม่ถือว่าซ้ำ
+            function checkDuplicateProductId() {
+                const idInput = document.getElementById('p-id');
+                const warningEl = document.getElementById('p-id-warning');
+                const oldId = document.getElementById('edit-old-id').value.trim().toLowerCase();
+                const typedId = idInput.value.trim().toLowerCase();
+
+                if (!typedId) {
+                    warningEl.classList.add('hidden');
+                    idInput.classList.remove('border-2', 'border-rose-500');
+                    return;
+                }
+
+                const isDuplicate = products.some(p => p.id.toLowerCase() === typedId && p.id.toLowerCase() !== oldId);
+
+                if (isDuplicate) {
+                    warningEl.classList.remove('hidden');
+                    idInput.classList.add('border-2', 'border-rose-500');
+                } else {
+                    warningEl.classList.add('hidden');
+                    idInput.classList.remove('border-2', 'border-rose-500');
+                }
+            }
+
             async function handleProductSubmit(e) {
                 e.preventDefault();
                 const id = document.getElementById('p-id').value.trim();
@@ -2482,6 +2511,13 @@
                 const isEdit = oldId !== "";
                 const baseAction = isEdit ? "updateProduct" : "createProduct";
                 const targetAction = getModeAction(baseAction);
+
+                // 🎯 [แก้บั๊ก] กันรหัสสินค้าซ้ำอีกชั้นตอนกดบันทึกจริง (เผื่อไม่ทันสังเกตคำเตือนตอนพิมพ์)
+                const isDuplicate = products.some(p => p.id.toLowerCase() === id.toLowerCase() && p.id.toLowerCase() !== oldId.trim().toLowerCase());
+                if (isDuplicate) {
+                    showToast(`รหัสสินค้า "${id}" มีอยู่แล้วในระบบ กรุณาใช้รหัสอื่น`, "error");
+                    return;
+                }
 
                 // 🔐 ขอ PIN ยืนยันตัวตนก่อนเพิ่ม/แก้ไขสินค้า
                 const pin = await showCustomPrompt("ยืนยันตัวตน", `กรุณากรอกรหัส PIN 4 หลักเพื่อยืนยันสิทธิ์ <b>${isEdit ? 'แก้ไข' : 'เพิ่ม'}สินค้า</b>`, "password", "••••");
@@ -2527,6 +2563,9 @@
                 document.getElementById('edit-old-id').value = "";
                 document.getElementById('form-mode-title').innerText = "โหมด: เพิ่มสินค้าใหม่";
                 document.getElementById('btn-cancel-edit').classList.add('hidden');
+                // 🌟 [อัปเกรด] ล้างคำเตือนรหัสซ้ำตอนรีเซ็ตฟอร์มด้วย
+                document.getElementById('p-id-warning').classList.add('hidden');
+                document.getElementById('p-id').classList.remove('border-2', 'border-rose-500');
             }
 
             async function deleteProduct(id) {
