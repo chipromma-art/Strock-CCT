@@ -16,15 +16,25 @@
 
         body {
             font-family: 'Kanit', sans-serif;
-            background-color: #eef2f7;
+            /* 🌟 [Glassmorphism] เปลี่ยนพื้นหลังจากสีทึบเรียบๆ เป็นไล่สีสดใส ให้เข้ากับการ์ดกระจกฝ้า */
+            background: linear-gradient(135deg, #6d5bd0 0%, #8b6fd6 30%, #b877c9 60%, #e987a8 100%);
+            background-attachment: fixed;
             color: #1e293b;
             transition: background-color 0.3s, color 0.3s;
         }
 
+        /* 🌟 [Glassmorphism] neu-card เดิมเป็นการ์ดทึบ+เงานุ่ม ตอนนี้เปลี่ยนเป็นกระจกฝ้าโปร่งแสง
+           ใช้กับ sidebar, แถบหัวข้อมือถือ, และกรอบเนื้อหาหลัก — เปลี่ยนจุดเดียวมีผลทั้งแอป
+           🎯 [ปรับความทึบ] ตัวอักษรในแอปเป็นสีเข้ม (text-slate-800 ฯลฯ) ทั่วทั้งแอป การจะเปลี่ยนสีตัวอักษรทุกจุดให้เป็นสีขาว
+           เพื่อให้เข้ากับพื้นหลังสีสันจัดแบบภาพตัวอย่างเป็นงานใหญ่เกินไปและเสี่ยงพัง จึงเลือกใช้กระจกที่ทึบขึ้น (82%)
+           แทนที่จะโปร่งมากแบบภาพตัวอย่าง (ซึ่งใช้ตัวอักษรสีขาวทั้งหมด) เพื่อให้ตัวหนังสือเดิมยังอ่านชัดเจน */
         .neu-card {
-            background: #eef2f7;
+            background: rgba(255, 255, 255, 0.82);
             border-radius: 24px;
-            box-shadow: 6px 6px 16px #d1d9e6, -6px -6px 16px #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 8px 32px rgba(31, 20, 60, 0.18);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
 
             /* 🌟 เพิ่ม 2 บรรทัดนี้ครับ */
             background-clip: padding-box;
@@ -173,7 +183,9 @@
 
         /* 🌙 Dark Mode Theme Style */
         body.dark-mode {
-            background-color: #1e293b !important;
+            /* 🎯 [แก้บั๊ก] ต้องใช้ shorthand "background" ไม่ใช่แค่ "background-color" ถึงจะล้างไล่สี Glassmorphism ออกได้จริง
+               (เพราะ body ปกติตั้ง background-image เป็นไล่สีไว้ ถ้า override แค่ background-color ไล่สีจะยังทับอยู่) */
+            background: #1e293b !important;
             color: #f8fafc !important;
         }
 
@@ -586,11 +598,18 @@
 
 <body class="flex h-screen overflow-hidden p-3 md:p-6 gap-4 md:gap-6 flex-col md:flex-row relative">
 
+    <!-- 🌟 [Glassmorphism] ก้อนเบลอสีสันตกแต่งพื้นหลัง ปรับให้ชัด/สดขึ้นตามภาพต้นแบบ + เพิ่มอีก 2 ก้อน -->
     <div
-        class="fixed top-[-10%] left-[-10%] w-[40vw] h-[40vw] rounded-full bg-blue-500/10 blur-[100px] pointer-events-none -z-10 dark:bg-blue-600/10">
+        class="fixed top-[-10%] left-[-10%] w-[40vw] h-[40vw] rounded-full bg-blue-500/30 blur-[100px] pointer-events-none -z-10 dark:bg-blue-600/10">
     </div>
     <div
-        class="fixed bottom-[-10%] right-[-10%] w-[35vw] h-[35vw] rounded-full bg-purple-500/10 blur-[120px] pointer-events-none -z-10 dark:bg-purple-600/10">
+        class="fixed bottom-[-10%] right-[-10%] w-[35vw] h-[35vw] rounded-full bg-pink-500/25 blur-[120px] pointer-events-none -z-10 dark:bg-purple-600/10">
+    </div>
+    <div
+        class="fixed top-[20%] right-[-5%] w-[28vw] h-[28vw] rounded-full bg-orange-400/20 blur-[110px] pointer-events-none -z-10 dark:hidden">
+    </div>
+    <div
+        class="fixed bottom-[10%] left-[10%] w-[25vw] h-[25vw] rounded-full bg-cyan-400/20 blur-[100px] pointer-events-none -z-10 dark:hidden">
     </div>
 
     <div id="mobile-overlay" onclick="toggleMobileMenu()"
@@ -1095,7 +1114,7 @@
 
                     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
                         <div
-                            class="p-5 rounded-3xl bg-[#eef2f7] border border-white/50 shadow-[6px_6px_12px_#d1d9e6,-6px_-6px_12px_#ffffff] transition-all hover:scale-105 flex flex-col items-center">
+                            class="p-5 rounded-3xl bg-white/50 backdrop-blur-xl border border-white/60 shadow-[0_8px_32px_rgba(31,20,60,0.1)] transition-all hover:scale-105 flex flex-col items-center">
                             <div
                                 class="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center mb-3 text-white shadow-lg shadow-blue-500/20">
                                 <i data-lucide="package-search" class="w-6 h-6"></i>
@@ -1108,9 +1127,9 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div
-                            class="p-6 rounded-3xl border border-white/50 bg-white/30 backdrop-blur-lg shadow-[6px_6px_12px_#d1d9e6,-6px_-6px_12px_#ffffff] flex flex-col items-center">
+                            class="p-6 rounded-3xl border border-white/60 bg-white/50 backdrop-blur-xl shadow-[0_8px_32px_rgba(31,20,60,0.1)] flex flex-col items-center">
                             <h3
-                                class="text-sm font-bold text-slate-700 mb-6 self-start flex items-center border-b border-slate-300/20 pb-2 w-full">
+                                class="text-sm font-bold text-slate-700 mb-6 self-start flex items-center border-b border-slate-300/30 pb-2 w-full">
                                 <i data-lucide="donut" class="w-4 h-4 mr-2 text-purple-500"></i>สัดส่วนมูลค่าสินค้า
                             </h3>
                             <div class="w-full max-w-[280px] aspect-square relative"><canvas
@@ -1118,9 +1137,9 @@
                         </div>
 
                         <div
-                            class="p-6 rounded-3xl border border-white/50 bg-white/30 backdrop-blur-lg shadow-[6px_6px_12px_#d1d9e6,-6px_-6px_12px_#ffffff] flex flex-col">
+                            class="p-6 rounded-3xl border border-white/60 bg-white/50 backdrop-blur-xl shadow-[0_8px_32px_rgba(31,20,60,0.1)] flex flex-col">
                             <h3
-                                class="text-sm font-bold text-slate-700 mb-6 flex items-center border-b border-slate-300/20 pb-2 w-full">
+                                class="text-sm font-bold text-slate-700 mb-6 flex items-center border-b border-slate-300/30 pb-2 w-full">
                                 <i data-lucide="bar-chart-2"
                                     class="w-4 h-4 mr-2 text-orange-500"></i>มูลค่าต้นทุนคงเหลือ
                             </h3>
@@ -3145,10 +3164,8 @@
                 const container = document.querySelector('#page-dashboard .grid');
                 if (container) {
                     container.innerHTML = `
-                    <div class="p-5 rounded-3xl bg-[#eef2f7] border border-white/50 shadow-[6px_6px_12px_#d1d9e6,-6px_-6px_12px_#ffffff] 
-            hover:shadow-[inset_4px_4px_8px_#d1d9e6,inset_-4px_-4px_8px_#ffffff] 
-            transition-all duration-300 transform hover:scale-[1.02] flex flex-col items-center justify-center text-center">
-    <!-- ใส่ Gradient ให้ไอคอน -->
+                    <div class="p-5 rounded-3xl bg-white/50 backdrop-blur-xl border border-white/60 shadow-[0_8px_32px_rgba(31,20,60,0.1)]
+            hover:bg-white/60 transition-all duration-300 transform hover:scale-[1.02] flex flex-col items-center justify-center text-center">
     <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center mb-3 text-white shadow-lg shadow-blue-500/20">
         <i data-lucide="package-search" class="w-6 h-6"></i>
     </div>
@@ -3156,35 +3173,35 @@
     <span class="text-2xl font-black text-slate-800" id="dash-total-items">0</span>
 </div>
 
-                    <div class="p-4 rounded-3xl bg-[#eef2f7] shadow-[6px_6px_12px_#d1d9e6,-6px_-6px_12px_#ffffff] border border-white/50 flex flex-col items-center justify-center text-center transition-transform hover:scale-105">
+                    <div class="p-4 rounded-3xl bg-white/50 backdrop-blur-xl border border-white/60 shadow-[0_8px_32px_rgba(31,20,60,0.1)] flex flex-col items-center justify-center text-center transition-all hover:bg-white/60 hover:scale-105">
                         <div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center mb-2 text-emerald-600 shadow-sm"><i data-lucide="boxes" class="w-5 h-5"></i></div>
                         <span class="text-[11px] font-bold text-slate-500 mb-2">ปริมาณสต๊อกรวม</span>
                         <div class="w-full space-y-1.5">
-                            <div class="flex justify-between items-center bg-emerald-50/80 px-2 py-1.5 rounded-lg border border-emerald-200/60 shadow-sm">
+                            <div class="flex justify-between items-center bg-emerald-50/80 px-2 py-1.5 rounded-lg border border-emerald-200/60">
                                 <span class="text-[10px] text-emerald-700 font-bold">📦 ทั่วไป</span>
                                 <span class="text-xs font-black text-emerald-600"><span id="dash-qty-pieces">0</span> <span class="text-[9px] font-medium text-emerald-500">ชิ้น</span></span>
                             </div>
-                            <div class="flex justify-between items-center bg-blue-50/80 px-2 py-1.5 rounded-lg border border-blue-200/60 shadow-sm">
+                            <div class="flex justify-between items-center bg-blue-50/80 px-2 py-1.5 rounded-lg border border-blue-200/60">
                                 <span class="text-[10px] text-blue-700 font-bold">🧵 ความยาว</span>
                                 <span class="text-xs font-black text-blue-600"><span id="dash-qty-meters">0</span> <span class="text-[9px] font-medium text-blue-500">เมตร</span></span>
                             </div>
                         </div>
                     </div>
 
-                    <div class="p-4 rounded-3xl bg-[#eef2f7] shadow-[6px_6px_12px_#d1d9e6,-6px_-6px_12px_#ffffff] border border-white/50 flex flex-col items-center justify-center text-center transition-transform hover:scale-105">
+                    <div class="p-4 rounded-3xl bg-white/50 backdrop-blur-xl border border-white/60 shadow-[0_8px_32px_rgba(31,20,60,0.1)] flex flex-col items-center justify-center text-center transition-all hover:bg-white/60 hover:scale-105">
                         <div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center mb-2 text-purple-600 shadow-sm"><i data-lucide="wallet" class="w-5 h-5"></i></div>
                         <span class="text-xs font-bold text-slate-500 mb-0.5">มูลค่าสินทรัพย์รวมในคลัง</span>
                         <span class="text-xl font-black text-purple-600" id="dash-total-value">฿0</span>
                         <span class="text-[9px] text-slate-400 mt-1">(ราคาต้นทุนรวม)</span>
                     </div>
 
-                    <div class="p-4 rounded-3xl bg-[#eef2f7] shadow-[6px_6px_12px_#d1d9e6,-6px_-6px_12px_#ffffff] border border-white/50 flex flex-col items-center justify-center text-center transition-transform hover:scale-105">
+                    <div class="p-4 rounded-3xl bg-white/50 backdrop-blur-xl border border-white/60 shadow-[0_8px_32px_rgba(31,20,60,0.1)] flex flex-col items-center justify-center text-center transition-all hover:bg-white/60 hover:scale-105">
                         <div class="w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center mb-2 text-rose-600 shadow-sm"><i data-lucide="trending-up" class="w-5 h-5"></i></div>
                         <span class="text-xs font-bold text-slate-500 mb-0.5">มูลค่าของที่เบิกใช้งาน (รวม)</span>
                         <span class="text-xl font-black text-rose-600" id="dash-total-out-value">฿0</span>
                     </div>
 
-                    <div class="p-4 rounded-3xl bg-[#eef2f7] shadow-[6px_6px_12px_#d1d9e6,-6px_-6px_12px_#ffffff] border border-white/50 flex flex-col items-center justify-center text-center transition-transform hover:scale-105">
+                    <div class="p-4 rounded-3xl bg-white/50 backdrop-blur-xl border border-white/60 shadow-[0_8px_32px_rgba(31,20,60,0.1)] flex flex-col items-center justify-center text-center transition-all hover:bg-white/60 hover:scale-105">
                         <div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center mb-2 text-amber-600 shadow-sm"><i data-lucide="pie-chart" class="w-5 h-5"></i></div>
                         <span class="text-xs font-bold text-slate-500 mb-0.5">หมวดหมู่ที่มีมูลค่าสูงสุด</span>
                         <span class="text-lg font-black text-amber-600 line-clamp-1 mt-1" id="dash-top-category">-</span>
