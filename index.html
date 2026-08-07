@@ -3305,11 +3305,16 @@
                 const userFilterVal = (document.getElementById('out-user-filter')?.value || '').trim().toLowerCase();
 
                 // 🌟 [อัปเกรด] รวมข้อมูลจากทั้ง 2 คลัง เผื่อมีบิลที่เบิกข้ามคลัง (ใช้ orderId เดียวกันเป็นตัวเชื่อม)
-                const grouped = getAllStockOutTransactions().reduce((acc, curr) => {
-                    const key = curr.orderId || curr.id || 'N/A';
-                    if (!acc[key]) acc[key] = { orderId: key, date: curr.date, user: curr.user, project: curr.project, remark: curr.remark, items: [] };
-                    acc[key].items.push(curr); return acc;
-                }, {});
+                // 🎯 [แก้ตามที่ขอ] ไม่เอารายการที่มาจากการปรับยอด Audit มารวมเป็น "บิล" ในหน้านี้
+                // (รายการพวกนี้ไม่มีเลขบิล/ชื่อผู้เบิกจริง เป็นแค่การปรับยอดสต๊อกภายใน ไม่ใช่บิลเบิกของจริง
+                //  แต่ข้อมูลใน StockOut sheet ยังอยู่ครบ ไม่กระทบการคำนวณยอดคงเหลือ แค่ไม่โชว์ในหน้าประวัติบิลนี้)
+                const grouped = getAllStockOutTransactions()
+                    .filter(t => !(t.remark || '').includes('(Audit)'))
+                    .reduce((acc, curr) => {
+                        const key = curr.orderId || curr.id || 'N/A';
+                        if (!acc[key]) acc[key] = { orderId: key, date: curr.date, user: curr.user, project: curr.project, remark: curr.remark, items: [] };
+                        acc[key].items.push(curr); return acc;
+                    }, {});
 
                 let sortedGroups = Object.values(grouped);
 
