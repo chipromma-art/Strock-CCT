@@ -1022,9 +1022,16 @@
                                             class="w-full p-3 neu-input rounded-xl text-sm font-medium text-center"
                                             placeholder="กรอกตัวเลข"></div>
                                 </div>
-                                <div class="text-right pt-2 border-t border-slate-300/40 mt-2">
+                                <div
+                                    class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 pt-2 border-t border-slate-300/40 mt-2">
+                                    <!-- 🌟 [อัปเกรด] เพิ่มรายการที่ไม่มีในระบบสต๊อก (ไม่ตัดสต๊อก แค่บันทึกลงบิลไว้) -->
+                                    <button type="button" onclick="addManualItemToCart()"
+                                        class="px-4 py-2.5 bg-white border border-slate-200 hover:border-blue-300 hover:bg-blue-50 text-slate-600 hover:text-blue-700 text-xs font-bold rounded-xl flex items-center justify-center space-x-1.5 transition-all shadow-sm">
+                                        <i data-lucide="pencil-plus" class="w-3.5 h-3.5"></i>
+                                        <span>พิมพ์เพิ่มรายการที่ไม่มีในระบบ</span>
+                                    </button>
                                     <button type="button" onclick="addItemToCart()" id="btn-add-to-cart-out"
-                                        class="neu-btn mt-3 flex items-center space-x-2 inline-flex px-6 py-3 text-sm font-bold text-blue-700 rounded-xl"><i
+                                        class="neu-btn flex items-center space-x-2 inline-flex px-6 py-3 text-sm font-bold text-blue-700 rounded-xl"><i
                                             data-lucide="shopping-cart"
                                             class="w-4 h-4"></i><span>เพิ่มลงรายการเบิก</span></button>
                                 </div>
@@ -2322,6 +2329,15 @@
                 return cacheNormal.products.find(p => p.id === productId) || cacheSolar.products.find(p => p.id === productId);
             }
 
+            // 🌟 [อัปเกรด] ดึงชื่อ/หน่วยของ "รายการนอกระบบ" ที่ฝังไว้ในหมายเหตุกลับมาใช้แสดงผล
+            // (รายการพวกนี้ไม่มีข้อมูลอยู่ใน Products sheet เลย เลยหาไม่เจอผ่าน findProductInAnyWarehouse)
+            function parseManualItemTag(remark) {
+                const nameMatch = (remark || '').match(/\[MANUAL_NAME:(.*?)\]/);
+                if (!nameMatch) return null;
+                const unitMatch = (remark || '').match(/\[MANUAL_UNIT:(.*?)\]/);
+                return { name: nameMatch[1], unit: unitMatch ? unitMatch[1] : '-' };
+            }
+
             // รวมประวัติเบิกออกจากทั้ง 2 คลัง พร้อมแท็กกำกับว่าแต่ละรายการมาจากคลังไหน
             // ใช้แทน stockOutTransactions (ซึ่งมีแค่คลังหลักของแอป) ทุกจุดที่ต้องรองรับบิลข้ามคลัง
             function getAllStockOutTransactions() {
@@ -2818,6 +2834,31 @@
                 document.getElementById('out-smart-search').focus();
             }
 
+            // 🌟 [อัปเกรด] เพิ่มรายการที่ "ไม่มีในระบบสต๊อก" ลงตะกร้าเบิกของ
+            // ใช้กรณีมีของที่ใช้งานจริงแต่ไม่เคยลงทะเบียนไว้ในฐานข้อมูลสินค้า — รายการนี้จะไม่ตัดสต๊อกใดๆ ในระบบ
+            // แค่บันทึกชื่อ/จำนวนไว้ในบิลเบิกเพื่อให้เอกสารครบถ้วนเท่านั้น
+            async function addManualItemToCart() {
+                const name = await showCustomPrompt("เพิ่มรายการนอกระบบ", "กรอก <b>ชื่อรายการ</b> ที่ต้องการเบิก<br><span class=\"text-[11px] text-slate-400\">(รายการนี้จะไม่ตัดสต๊อกในระบบ เพราะไม่มีข้อมูลสินค้าอยู่)</span>", "text", "เช่น สายไฟ 2 เมตร");
+                if (name === null || name.trim() === '') return;
+                const trimmedName = name.trim();
+
+                const qtyStr = await showCustomPrompt("ระบุจำนวน", `จำนวนที่ต้องการเบิกของ <b>"${trimmedName}"</b>`, "number", "1");
+                if (qtyStr === null) return;
+                const qty = parseFloat(qtyStr);
+                if (isNaN(qty) || qty <= 0) { showToast("กรุณาระบุจำนวนให้ถูกต้องครับ", "warning"); return; }
+
+                const unitInput = await showCustomPrompt("ระบุหน่วยนับ", `หน่วยนับของ <b>"${trimmedName}"</b> เช่น ชิ้น, เมตร, ม้วน`, "text", "ชิ้น");
+                if (unitInput === null) return;
+                const unit = unitInput.trim() !== '' ? unitInput.trim() : 'ชิ้น';
+
+                // 🎯 สร้างรหัสชั่วคราวให้รายการนอกระบบ ไม่ชนกับรหัสสินค้าจริงในระบบแน่นอน
+                const manualId = "MANUAL-" + new Date().getTime();
+                cartItems.push({ productId: manualId, name: trimmedName, qty, unit, warehouse: cartPickerWarehouse, isManual: true });
+
+                renderCartTable();
+                showToast(`เพิ่ม "${trimmedName}" ลงตะกร้าแล้ว (รายการนอกระบบ ไม่ตัดสต๊อก)`, "success");
+            }
+
             function removeCartItem(index) {
                 cartItems.splice(index, 1); renderCartTable(); updateStockOutDropdown();
             }
@@ -2846,6 +2887,11 @@
                         ? `<span class="ml-1.5 inline-flex items-center text-[9px] font-bold px-1.5 py-0.5 rounded bg-orange-100 text-orange-700 border border-orange-200 align-middle">โซล่า</span>`
                         : `<span class="ml-1.5 inline-flex items-center text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 border border-blue-200 align-middle">ทั่วไป</span>`;
 
+                    // 🌟 [อัปเกรด] ป้ายบอกว่าเป็นรายการนอกระบบ (ไม่ตัดสต๊อก ไม่มีข้อมูลสินค้าอยู่ในระบบ)
+                    const manualBadgeHtml = item.isManual
+                        ? `<span class="ml-1.5 inline-flex items-center text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-200 text-slate-600 border border-slate-300 align-middle">นอกระบบ</span>`
+                        : '';
+
                     // 🌟 2. สร้างปุ่มแนบรูปลิงก์ (จะโชว์เฉพาะงานซ่อมเท่านั้น)
                     const repairBtnHtml = isRepair ? `
                     <div class="mt-2 mb-1">
@@ -2861,9 +2907,9 @@
 
                     // 🌟 3. นำตัวแปร repairBtnHtml ไปแทรกไว้ใต้ชื่อสินค้า
                     tr.innerHTML = `
-                    <td class="p-3 font-mono font-bold text-slate-700">${item.productId}</td>
+                    <td class="p-3 font-mono font-bold text-slate-700">${item.isManual ? '<span class="text-slate-400 italic">-</span>' : item.productId}</td>
                     <td class="p-3 font-medium text-slate-800">
-                        ${item.name}${warehouseBadgeHtml}
+                        ${item.name}${warehouseBadgeHtml}${manualBadgeHtml}
                         ${repairBtnHtml}
                     </td>
                     <td class="p-3 text-center font-bold text-blue-700 font-mono bg-blue-50/50">${item.qty}</td>
@@ -2917,6 +2963,11 @@
                         let finalRemark = remark;
                         if (item.repairImage && item.repairImage.trim() !== "") {
                             finalRemark += ` [IMAGE:${item.repairImage.trim()}]`;
+                        }
+                        // 🌟 [อัปเกรด] รายการนอกระบบไม่มีข้อมูลสินค้าอยู่จริง เก็บชื่อ/หน่วยไว้ในหมายเหตุ
+                        // เพื่อให้หน้าต่างดูบิล/PDF ดึงชื่อที่พิมพ์ไว้กลับมาแสดงได้ถูกต้อง (แทนที่จะโชว์ "-")
+                        if (item.isManual) {
+                            finalRemark += ` [MANUAL_NAME:${item.name}] [MANUAL_UNIT:${item.unit}]`;
                         }
 
                         // 🌟 สังเกตตรงตัวแปรสุดท้าย เปลี่ยนมาใช้ finalRemark แทน remark เดิมครับ
@@ -3404,9 +3455,11 @@
                     byUser[userName].orderIds.add(group.orderId);
                     group.items.forEach(item => {
                         // 🌟 [อัปเกรด] หาข้อมูลสินค้าจาก cache ของคลังต้นทางที่ถูกต้อง
+                        // 🎯 ถ้าเป็นรายการนอกระบบ (ไม่มีในฐานข้อมูลสินค้า) ดึงชื่อ/หน่วยที่พิมพ์ไว้จากหมายเหตุแทน
                         const p = findProductInAnyWarehouse(item.productId, item.warehouse);
-                        const displayName = p ? `${p.id} - ${p.name}` : item.productId;
-                        const unit = p ? p.unit : '';
+                        const manualInfo = !p ? parseManualItemTag(item.remark) : null;
+                        const displayName = p ? `${p.id} - ${p.name}` : (manualInfo ? `${manualInfo.name} (นอกระบบ)` : item.productId);
+                        const unit = p ? p.unit : (manualInfo ? manualInfo.unit : '');
                         // 🌟 [อัปเกรด] คีย์รวมคลังเข้าไปด้วย กันรหัสสินค้าชนกันกรณีมีรหัสซ้ำกันคนละคลัง
                         const productKey = `${item.warehouse}::${item.productId}`;
                         if (!byUser[userName].products[productKey]) {
@@ -3849,6 +3902,8 @@
                 let tableRows = items.map((item, idx) => {
                     // 🌟 [อัปเกรด] หาข้อมูลสินค้าจาก cache ของคลังต้นทางที่ถูกต้อง (ไม่ใช่ products global ตัวเดียวอีกต่อไป)
                     const p = findProductInAnyWarehouse(item.productId, item.warehouse);
+                    // 🎯 [อัปเกรด] ถ้าเป็นรายการนอกระบบ (ไม่มีในฐานข้อมูลสินค้า) ดึงชื่อ/หน่วยที่พิมพ์ไว้ตอนเบิกกลับมาแสดงแทน "-"
+                    const manualInfo = !p ? parseManualItemTag(item.remark) : null;
                     const cost = p ? (parseFloat(p.cost) || 0) : 0;
                     const totalItemPrice = item.qty * cost;
                     totalBillPrice += totalItemPrice;
@@ -3876,10 +3931,13 @@
                         </div>` : '';
 
                     // 🌟 [อัปเกรด] ส่ง item.warehouse ไปให้ returnItemToStock ด้วย จะได้คืนเข้าคลังที่ถูกต้อง
-                    const returnBtnHtml = remainingQty > 0 ? `
+                    // 🎯 รายการนอกระบบไม่มีสต๊อกจริงให้คืน เลยไม่โชว์ปุ่มคืนของให้
+                    const returnBtnHtml = manualInfo
+                        ? `<span class="text-[11px] text-slate-400 font-medium">รายการนอกระบบ</span>`
+                        : (remainingQty > 0 ? `
                         <button onclick="returnItemToStock('${orderId}', '${item.productId}', ${remainingQty}, '${item.warehouse}')" class="px-4 py-1.5 bg-white border border-emerald-300 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg text-xs font-bold transition-colors shadow-sm flex items-center justify-center mx-auto space-x-1.5">
                             <i data-lucide="corner-down-left" class="w-3.5 h-3.5"></i><span>คืนของเข้าคลัง</span>
-                        </button>` : `<span class="text-[11px] text-slate-400 font-medium">คืนครบแล้ว</span>`;
+                        </button>` : `<span class="text-[11px] text-slate-400 font-medium">คืนครบแล้ว</span>`);
 
                     // 🌟 [เพิ่มใหม่] วิชามาร: ตรวจจับว่าในหมายเหตุมีแท็กรูปภาพซ่อนอยู่หรือไม่
                     let rawRemark = item.remark || '';
@@ -3901,16 +3959,16 @@
 
                     return `
                     <tr class="border-b border-slate-200/60 hover:bg-white/50 transition-colors">
-                        <td class="p-4 text-center font-mono font-bold text-slate-700">${item.productId}</td>
+                        <td class="p-4 text-center font-mono font-bold text-slate-700">${manualInfo ? '<span class="text-slate-400 italic">-</span>' : item.productId}</td>
                         <td class="p-4 font-medium text-slate-800">
-                            <div class="text-sm">${p ? p.name : '-'}${itemWarehouseBadge}</div>
+                            <div class="text-sm">${p ? p.name : (manualInfo ? manualInfo.name : '-')}${itemWarehouseBadge}${manualInfo ? ' <span class="ml-1 inline-flex items-center text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-200 text-slate-600 border border-slate-300 align-middle">นอกระบบ</span>' : ''}</div>
                             ${imageBtnHtml} <div class="text-[11px] font-semibold mt-1.5 flex items-center space-x-3">
-                                <span class="text-slate-500">ต้นทุน: ฿${cost.toLocaleString(undefined, { maximumFractionDigits: 2 })} / ${p ? p.unit : '-'}</span>
+                                <span class="text-slate-500">ต้นทุน: ฿${cost.toLocaleString(undefined, { maximumFractionDigits: 2 })} / ${p ? p.unit : (manualInfo ? manualInfo.unit : '-')}</span>
                                 <span class="text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md">รวม: ฿${totalItemPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
                             </div>
                         </td>
                         <td class="p-4 text-center font-bold text-blue-700 text-lg">${item.qty}${returnedBadgeHtml}</td>
-                        <td class="p-4 text-center text-slate-500 font-medium">${p ? p.unit : '-'}</td>
+                        <td class="p-4 text-center text-slate-500 font-medium">${p ? p.unit : (manualInfo ? manualInfo.unit : '-')}</td>
                         <td class="p-4 text-center modal-action-cell">
                             ${returnBtnHtml}
                         </td>
