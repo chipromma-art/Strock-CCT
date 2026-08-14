@@ -2048,6 +2048,34 @@
             // 🔐 อย่าลืมอัปเดต URL ล่าสุดของคุณแดนตรงนี้นะครับ
             const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyWMeqVDE04VgGm4Rz5te2XYghU3VH_Cnd5pkrq6r74UwwyrUuwq2VkcUtayZlY4uYUuw/exec";
 
+            // 🎯 [แก้บั๊ก] Google Apps Script บางครั้งตอบกลับมาเป็นหน้า HTML error แทน JSON แบบเป็นพักๆ
+            // (ปัญหาที่รู้จักกันของตัว Apps Script เอง มักเกิดตอนยิง request ถี่ๆ ติดกันเร็ว เช่น บิลที่มีหลายรายการ)
+            // ฟังก์ชันนี้ครอบ fetch ปกติ แล้วลองใหม่อัตโนมัติถ้าเจอปัญหานี้ ก่อนจะฟ้อง error จริงให้ผู้ใช้เห็น
+            async function fetchWithRetry(targetUrl, fetchOptions = {}, retries = 2, delayMs = 900) {
+                for (let attempt = 0; attempt <= retries; attempt++) {
+                    try {
+                        const rawResponse = await fetch(targetUrl, fetchOptions);
+                        const rawText = await rawResponse.text();
+                        try {
+                            return JSON.parse(rawText);
+                        } catch (parseErr) {
+                            // ได้ HTML/ข้อความที่ไม่ใช่ JSON กลับมา — ลองใหม่ถ้ายังมีโอกาสเหลืออยู่
+                            if (attempt < retries) {
+                                await new Promise(r => setTimeout(r, delayMs));
+                                continue;
+                            }
+                            throw new Error("เซิร์ฟเวอร์ตอบกลับไม่ถูกต้อง (ลองใหม่อัตโนมัติแล้วไม่สำเร็จ) กรุณาลองอีกครั้ง");
+                        }
+                    } catch (networkErr) {
+                        if (attempt < retries) {
+                            await new Promise(r => setTimeout(r, delayMs));
+                            continue;
+                        }
+                        throw networkErr;
+                    }
+                }
+            }
+
             const USER_PINS = {
                 "1234": "แดน", "5678": "แม็ก", "1111": "นาเดีย", "2222": "ปูเป้",
                 "0000": "พี่ปูน", "9999": "พี่วาส", "4444": "พี่แน็ก", "5555": "พี่เบิร์ด"
@@ -2144,8 +2172,7 @@
                 }
 
                 try {
-                    const response = await fetch(`${SCRIPT_URL}?action=readAll&warehouse=${warehouse}`, { method: 'GET', redirect: 'follow' });
-                    const res = await response.json();
+                    const res = await fetchWithRetry(`${SCRIPT_URL}?action=readAll&warehouse=${warehouse}`, { method: 'GET', redirect: 'follow' });
                     if (res.status === "success") {
                         if (warehouse === 'solar') {
                             cacheSolar.products = res.productsSolar || [];
@@ -2562,8 +2589,7 @@
                 setSyncStatus(true, "กำลังบันทึกข้อมูล...");
                 try {
                     const url = `${SCRIPT_URL}?action=${targetAction}&id=${encodeURIComponent(id)}&name=${encodeURIComponent(name)}&category=${encodeURIComponent(category)}&unit=${encodeURIComponent(unit)}&min=${encodeURIComponent(min)}&cost=${encodeURIComponent(cost)}&image=${encodeURIComponent(image)}` + (isEdit ? `&oldId=${encodeURIComponent(oldId)}` : '') + `&pin=${encodeURIComponent(pin)}`;
-                    const response = await fetch(url, { method: 'POST', redirect: 'follow' });
-                    const res = await response.json();
+                    const res = await fetchWithRetry(url, { method: 'POST', redirect: 'follow' });
                     if (res.status === "success") {
                         showToast("อัปเดตฐานข้อมูลสินค้าเรียบร้อย!", "success");
                         resetProductForm(); fetchCloudData();
@@ -2614,8 +2640,7 @@
                 setSyncStatus(true, "กำลังลบข้อมูล...");
                 const targetAction = getModeAction("deleteProduct");
                 try {
-                    const response = await fetch(`${SCRIPT_URL}?action=${targetAction}&id=${encodeURIComponent(id)}&pin=${encodeURIComponent(pin)}`, { method: 'POST', redirect: 'follow' });
-                    const res = await response.json();
+                    const res = await fetchWithRetry(`${SCRIPT_URL}?action=${targetAction}&id=${encodeURIComponent(id)}&pin=${encodeURIComponent(pin)}`, { method: 'POST', redirect: 'follow' });
                     if (res.status === "success") { showToast("ลบข้อมูลสำเร็จ", "success"); fetchCloudData(); }
                     else { showToast("ไม่สามารถลบได้: " + res.message, "error"); setSyncStatus(false); }
                 } catch (error) { showToast("เกิดข้อผิดพลาด", "error"); setSyncStatus(false); }
@@ -2725,8 +2750,7 @@
                     for (const item of inCart) {
                         let finalRemark = item.remark === "" ? `[รับเข้าโดย: ${operatorName}]` : `${item.remark} [รับเข้าโดย: ${operatorName}]`;
                         // 🔐 แนบ pin ไปให้ Apps Script เช็คซ้ำฝั่ง server ก่อนบันทึกจริง
-                        const response = await fetch(`${SCRIPT_URL}?action=${targetAction}&date=${encodeURIComponent(date)}&productId=${encodeURIComponent(item.productId)}&qty=${encodeURIComponent(item.qty)}&remark=${encodeURIComponent(finalRemark)}&pin=${encodeURIComponent(pin)}`, { method: 'POST', redirect: 'follow' });
-                        const res = await response.json();
+                        const res = await fetchWithRetry(`${SCRIPT_URL}?action=${targetAction}&date=${encodeURIComponent(date)}&productId=${encodeURIComponent(item.productId)}&qty=${encodeURIComponent(item.qty)}&remark=${encodeURIComponent(finalRemark)}&pin=${encodeURIComponent(pin)}`, { method: 'POST', redirect: 'follow' });
                         if (res.status !== "success") throw new Error(res.message || "บันทึกไม่สำเร็จ");
                     }
                     showToast(`บันทึกเข้าคลังสำเร็จ!<br><span class="text-[11px] font-normal text-slate-500">ทำรายการโดย: คุณ ${operatorName}</span>`, "success");
@@ -2973,8 +2997,7 @@
                         // 🌟 สังเกตตรงตัวแปรสุดท้าย เปลี่ยนมาใช้ finalRemark แทน remark เดิมครับ
                         // 🔐 แนบ pin ไปให้ Apps Script เช็คซ้ำฝั่ง server ก่อนบันทึกจริง
                         const url = `${SCRIPT_URL}?action=${targetAction}&date=${encodeURIComponent(date)}&productId=${encodeURIComponent(item.productId)}&qty=${encodeURIComponent(item.qty)}&user=${encodeURIComponent(receiverName)}&project=${encodeURIComponent(project)}&remark=${encodeURIComponent(finalRemark)}&orderId=${encodeURIComponent(orderId)}&pin=${encodeURIComponent(pin)}`;
-                        const response = await fetch(url, { method: 'POST', redirect: 'follow' });
-                        const res = await response.json();
+                        const res = await fetchWithRetry(url, { method: 'POST', redirect: 'follow' });
                         if (res.status !== "success") throw new Error(res.message || "บันทึกไม่สำเร็จ");
                     }
                     showToast(`บันทึกใบเบิก ${orderId} สำเร็จ!`, "success");
@@ -3698,8 +3721,7 @@
                 const targetAction = getModeAction("deleteStock" + type);
                 try {
                     // 🔐 แนบ pin ไปให้ Apps Script เช็คซ้ำฝั่ง server ก่อนลบจริง
-                    const response = await fetch(`${SCRIPT_URL}?action=${targetAction}&id=${encodeURIComponent(id)}&pin=${encodeURIComponent(pin)}`, { method: 'POST', redirect: 'follow' });
-                    const res = await response.json();
+                    const res = await fetchWithRetry(`${SCRIPT_URL}?action=${targetAction}&id=${encodeURIComponent(id)}&pin=${encodeURIComponent(pin)}`, { method: 'POST', redirect: 'follow' });
                     if (res.status === "success") { showToast("ลบข้อมูลสำเร็จ", "success"); fetchCloudData(); }
                     else { showToast("ไม่สามารถลบได้: " + res.message, "error"); setSyncStatus(false); }
                 } catch (error) { showToast("เกิดข้อผิดพลาดในการเชื่อมต่อ", "error"); setSyncStatus(false); }
@@ -4007,8 +4029,7 @@
                             for (let item of items) {
                                 const targetAction = getActionForWarehouse("deleteStockOut", item.warehouse);
                                 // 🔐 แนบ pin ไปให้ Apps Script เช็คซ้ำฝั่ง server ก่อนลบจริง
-                                const response = await fetch(`${SCRIPT_URL}?action=${targetAction}&id=${encodeURIComponent(item.id)}&pin=${encodeURIComponent(pin)}`, { method: 'POST', redirect: 'follow' });
-                                const res = await response.json();
+                                const res = await fetchWithRetry(`${SCRIPT_URL}?action=${targetAction}&id=${encodeURIComponent(item.id)}&pin=${encodeURIComponent(pin)}`, { method: 'POST', redirect: 'follow' });
                                 if (res.status !== "success") throw new Error(res.message || "ลบไม่สำเร็จ");
                             }
                             showToast(`ลบบิลออกจากระบบเรียบร้อย<br><span class="text-[11px] font-normal text-slate-500">ลบโดย: คุณ ${operatorName}</span>`, "success");
@@ -4072,8 +4093,7 @@
                 try {
                     // 🔐 แนบ pin ไปให้ Apps Script เช็คซ้ำฝั่ง server ก่อนบันทึกจริง
                     const url = `${SCRIPT_URL}?action=${targetAction}&date=${encodeURIComponent(date)}&productId=${encodeURIComponent(productId)}&qty=${encodeURIComponent(returnQty)}&remark=${encodeURIComponent(remark)}&pin=${encodeURIComponent(pin)}`;
-                    const response = await fetch(url, { method: 'POST', redirect: 'follow' });
-                    const res = await response.json();
+                    const res = await fetchWithRetry(url, { method: 'POST', redirect: 'follow' });
                     if (res.status !== "success") throw new Error(res.message || "บันทึกไม่สำเร็จ");
 
                     showToast(`✅ รับคืน ${productId} กลับเข้าคลังเรียบร้อยแล้ว!`, "success");
@@ -4155,8 +4175,7 @@
                         const targetAction = getActionForWarehouse("updateStockOutStatus", wh);
                         // 🔐 แนบ pin ไปให้ Apps Script เช็คซ้ำฝั่ง server ก่อนอัปเดตสถานะจริง
                         const url = `${SCRIPT_URL}?action=${targetAction}&orderId=${encodeURIComponent(orderId)}&status=${encodeURIComponent('ตรวจเสร็จ')}&user=${encodeURIComponent(USER_PINS[pin])}&pin=${encodeURIComponent(pin)}`;
-                        const response = await fetch(url, { method: 'POST', redirect: 'follow' });
-                        const res = await response.json();
+                        const res = await fetchWithRetry(url, { method: 'POST', redirect: 'follow' });
                         if (res.status === "success") updatedAny = true;
                     }
                     if (!updatedAny) throw new Error("ไม่พบบิลนี้ในระบบ");
@@ -5089,8 +5108,7 @@
 
                         // ยิงข้อมูลไปที่ Google Apps Script
                         // 🔐 แนบ pin ไปให้ Apps Script เช็คซ้ำฝั่ง server ก่อนบันทึกจริง
-                        const response = await fetch(`${SCRIPT_URL}?action=${targetAction}&date=${encodeURIComponent(dateStr)}&productId=${encodeURIComponent(item.id)}&qty=${encodeURIComponent(qtyToSync)}&remark=${encodeURIComponent(remark)}&pin=${encodeURIComponent(pin)}`, { method: 'POST', redirect: 'follow' });
-                        const res = await response.json();
+                        const res = await fetchWithRetry(`${SCRIPT_URL}?action=${targetAction}&date=${encodeURIComponent(dateStr)}&productId=${encodeURIComponent(item.id)}&qty=${encodeURIComponent(qtyToSync)}&remark=${encodeURIComponent(remark)}&pin=${encodeURIComponent(pin)}`, { method: 'POST', redirect: 'follow' });
                         if (res.status !== "success") throw new Error(res.message || "บันทึกไม่สำเร็จ");
                     }
 
