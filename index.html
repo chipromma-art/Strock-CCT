@@ -2434,6 +2434,24 @@
                 }
             }
 
+            // 🌟 [อัปเกรด] ตั้งช่วงวันที่เริ่มต้นให้อัตโนมัติ (ล่าสุด 30 วัน) กันดึงข้อมูลทั้งหมดมาแสดงจนหน้าอืด
+            // ถ้าผู้ใช้ตั้งค่าช่วงวันที่เองไว้อยู่แล้ว จะไม่ไปยุ่ง (เคารพตัวกรองที่เลือกไว้เสมอ)
+            // อยากดูย้อนหลังไกลกว่านี้ แค่ปรับวันที่ "จาก" ในตัวกรองเองได้เลย ไม่ต้องกดอะไรเพิ่ม
+            function setDefaultRecentDateRange(prefix, days = 30) {
+                const startEl = document.getElementById(`${prefix}-start-date`);
+                const endEl = document.getElementById(`${prefix}-end-date`);
+                if (!startEl || !endEl) return;
+                if (startEl.value || endEl.value) return; // มีค่าอยู่แล้ว (ผู้ใช้ตั้งเอง) ไม่ต้องทับ
+
+                const today = new Date();
+                const past = new Date();
+                past.setDate(today.getDate() - days);
+
+                const fmt = (d) => d.toISOString().split('T')[0];
+                startEl.value = fmt(past);
+                endEl.value = fmt(today);
+            }
+
             function switchTab(tabId) {
                 currentActiveTab = tabId;
                 document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
@@ -2455,8 +2473,8 @@
                     updateStockOutDropdown(); renderCartTable();
                 }
                 if (tabId === 'report') renderReportTable();
-                if (tabId === 'movement') renderMovementTable();
-                if (tabId === 'history-in') renderHistoryInTable();
+                if (tabId === 'movement') { setDefaultRecentDateRange('mov'); renderMovementTable(); }
+                if (tabId === 'history-in') { setDefaultRecentDateRange('in'); renderHistoryInTable(); }
                 if (tabId === 'history-out') renderHistoryOutTable();
                 if (tabId === 'survey') { lucide.createIcons(); }
             }
@@ -4287,12 +4305,14 @@
                 });
             });
 
-            // 🌟 ฟังก์ชันสำหรับล้างค่าตัวเลือกวันที่กลับเป็นค่าว่าง
+            // 🌟 ฟังก์ชันสำหรับล้างค่าตัวเลือกวันที่ — สำหรับหน้ารายงานเคลื่อนไหว/ประวัติต้นทาง จะรีเซ็ตกลับไปที่
+            // ช่วงเริ่มต้น (ล่าสุด 30 วัน) แทนที่จะโชว์ข้อมูลทั้งหมด ตามที่ขอไว้ (กันข้อมูลเยอะจนหน้าอืด)
+            // ส่วนหน้าประวัติปลายทาง ยังคงคืนค่าว่าง (โชว์ทั้งหมด) เหมือนเดิม ไม่เปลี่ยนพฤติกรรม
             function clearDateFilter(prefix) {
                 document.getElementById(`${prefix}-start-date`).value = '';
                 document.getElementById(`${prefix}-end-date`).value = '';
-                if (prefix === 'mov') renderMovementTable();
-                if (prefix === 'in') renderHistoryInTable();
+                if (prefix === 'mov') { setDefaultRecentDateRange('mov'); renderMovementTable(); }
+                if (prefix === 'in') { setDefaultRecentDateRange('in'); renderHistoryInTable(); }
                 if (prefix === 'out') renderHistoryOutTable();
             }
 
